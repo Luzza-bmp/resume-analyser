@@ -37,6 +37,11 @@ export default function LoginPage() {
         if (response.data.name) {
           localStorage.setItem("user_name", response.data.name);
         }
+        if (response.data.avatar_url) {
+          localStorage.setItem("avatar_url", response.data.avatar_url);
+        } else {
+          localStorage.removeItem("avatar_url");
+        }
       }
       
       if (userRole === "applicant") {

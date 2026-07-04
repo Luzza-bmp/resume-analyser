@@ -12,7 +12,7 @@ import { X, Sparkles } from "lucide-react";
 export default function RecruiterPostJob() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [skills, setSkills] = useState<string[]>(["React", "TypeScript", "Git"]);
+  const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
   const [experienceLevel, setExperienceLevel] = useState("");
   const [jobType, setJobType] = useState("");
@@ -41,11 +41,17 @@ export default function RecruiterPostJob() {
         alert("Please enter a job title");
         return;
     }
+    const recruiter_id = localStorage.getItem("user_id");
+    const userRole = localStorage.getItem("user_role");
+    if (!recruiter_id || userRole !== "recruiter") {
+      alert("Please log in as a recruiter before posting a job.");
+      setIsSubmitting(false);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // In a real app, recruiter_id would come from auth context
-      const recruiter_id = localStorage.getItem("user_id") || "00000000-0000-0000-0000-000000000000"; 
-      await axios.post("http://localhost:5000/api/jobs", {
+      await axios.post("http://127.0.0.1:5000/api/jobs", {
         recruiter_id,
         title,
         description,
@@ -65,9 +71,10 @@ export default function RecruiterPostJob() {
       setLocation("");
       setSalaryMin("");
       setSalaryMax("");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to post job");
+    } catch (err: any) {
+      console.error("Post job error:", err);
+      const message = err.response?.data?.error || "Failed to post job";
+      alert(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -178,24 +185,24 @@ export default function RecruiterPostJob() {
                 <Label>Salary Range </Label>
                 <div className="flex items-center gap-2">
                   <div className="relative flex-1">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-medium">₹</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium">Rs.</span>
                     <Input
                       type="number"
                       value={salaryMin}
                       onChange={(e) => setSalaryMin(e.target.value)}
                       placeholder="Min"
-                      className="h-11 pl-7"
+                      className="h-11 pl-10"
                     />
                   </div>
                   <span className="text-slate-400">-</span>
                   <div className="relative flex-1">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-medium">₹</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium">Rs.</span>
                     <Input
                       type="number"
                       value={salaryMax}
                       onChange={(e) => setSalaryMax(e.target.value)}
                       placeholder="Max"
-                      className="h-11 pl-7"
+                      className="h-11 pl-10"
                     />
                   </div>
                 </div>

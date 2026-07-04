@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router";
+import { useEffect, useState } from "react";
 import { LayoutDashboard, PlusSquare, Users, User, Sparkles } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,6 +19,22 @@ export function RecruiterLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const [sidebarName, setSidebarName] = useState(localStorage.getItem("user_name") || "Recruiter");
+  const [sidebarAvatar, setSidebarAvatar] = useState(localStorage.getItem("avatar_url") || "");
+  const [sidebarJobTitle, setSidebarJobTitle] = useState(localStorage.getItem("user_job_title") || "");
+
+  const refreshSidebarProfile = () => {
+    setSidebarName(localStorage.getItem("user_name") || "Recruiter");
+    setSidebarAvatar(localStorage.getItem("avatar_url") || "");
+    setSidebarJobTitle(localStorage.getItem("user_job_title") || "");
+  };
+
+  useEffect(() => {
+    refreshSidebarProfile();
+    const handleProfileChanged = () => refreshSidebarProfile();
+    window.addEventListener("profile-changed", handleProfileChanged);
+    return () => window.removeEventListener("profile-changed", handleProfileChanged);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -27,7 +44,7 @@ export function RecruiterLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 bg-[#1E3A5F] flex flex-col flex-shrink-0" data-testid="recruiter-sidebar">
+      <aside className="w-64 bg-gradient-to-b from-blue-700 via-blue-800 to-blue-900 flex flex-col flex-shrink-0" data-testid="recruiter-sidebar">
         <div className="h-16 flex items-center px-6">
           <Link to="/" className="text-white text-2xl font-bold tracking-tight">SipSetu</Link>
         </div>
@@ -60,16 +77,22 @@ export function RecruiterLayout({ children }: { children: React.ReactNode }) {
         >
           <div className="flex items-center gap-3">
             <Avatar>
-              <AvatarImage src="" />
-              <AvatarFallback className="bg-[#F97316] text-white">
-                {localStorage.getItem("user_name")?.split(' ').map(n => n[0]).join('') || "RC"}
-              </AvatarFallback>
+              {sidebarAvatar ? (
+                <AvatarImage src={sidebarAvatar} />
+              ) : (
+                <>
+                  <AvatarImage src="" />
+                  <AvatarFallback className="bg-[#F97316] text-white">
+                    {sidebarName.split(' ').map(n => n[0]).join('') || "RC"}
+                  </AvatarFallback>
+                </>
+              )}
             </Avatar>
             <div className="flex flex-col">
               <span className="text-sm font-medium text-white truncate max-w-[150px]">
-                {localStorage.getItem("user_name") || "Recruiter"}
+                {sidebarName}
               </span>
-              <span className="text-xs text-slate-400">HR Manager</span>
+              <span className="text-xs text-slate-400">{sidebarJobTitle}</span>
             </div>
           </div>
         </Link>
