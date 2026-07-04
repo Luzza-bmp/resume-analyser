@@ -1,5 +1,4 @@
-def calculate_match_score(resume_skills: list, jd_skills: list) -> float:
-    """% of JD skills that also appear in the resume."""
+def calculate_match_score(resume_skills, jd_skills):
     if not jd_skills:
         return 0.0
     resume_set = set(resume_skills)
@@ -8,16 +7,15 @@ def calculate_match_score(resume_skills: list, jd_skills: list) -> float:
     return round(len(matched) / len(jd_set) * 100, 2)
 
 
-def get_missing_skills(resume_skills: list, jd_skills: list) -> list:
+def get_missing_skills(resume_skills, jd_skills):
     return sorted(list(set(jd_skills) - set(resume_skills)))
 
 
-def get_matched_skills(resume_skills: list, jd_skills: list) -> list:
+def get_matched_skills(resume_skills, jd_skills):
     return sorted(list(set(resume_skills) & set(jd_skills)))
 
 
-def score_format(parsed_data: dict) -> float:
-    """Basic completeness check — 20 points per section present."""
+def score_format(parsed_data):
     score = 0
     if parsed_data.get("name"):
         score += 20
@@ -32,6 +30,5 @@ def score_format(parsed_data: dict) -> float:
     return min(score, 100)
 
 
-def overall_score(match_score: float, format_score: float) -> float:
-    """Weighted composite: 70% keyword match, 30% format."""
+def overall_score(match_score, format_score):
     return round(match_score * 0.70 + format_score * 0.30, 2)

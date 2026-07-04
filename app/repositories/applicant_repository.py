@@ -1,21 +1,35 @@
 from app import db
-from app.models import Applicant
+from app.models import Resume, Analysis
 
 
-def save_applicant(user_id, data):
-
-    applicant = Applicant.query.get(user_id)
-    if not applicant:
-        applicant = Applicant(user_id=user_id)
-        db.session.add(applicant)
-
-    applicant.name = data["name"]
-    applicant.email = data["email"]
-    applicant.phone = data["phone"]
-    applicant.education = ",".join(data["education"])
-    applicant.experience = data["experience"]
-    applicant.skills = data["skills"]
-
+def save_resume(applicant_id, filepath, raw_text, parsed_data):
+    resume = Resume(
+        applicant_id=applicant_id,
+        file_path=filepath,
+        raw_text=raw_text,
+        name=parsed_data.get("name"),
+        email=parsed_data.get("email"),
+        phone=parsed_data.get("phone"),
+        experience_years=parsed_data.get("experience"),
+        skills=parsed_data.get("skills", [])
+    )
+    db.session.add(resume)
     db.session.commit()
+    return resume
 
-    return applicant.user_id
+
+def save_analysis(resume_id, jd_text, match_score, format_score, overall_score,
+                   matched_skills, missing_skills, suggestions):
+    analysis = Analysis(
+        resume_id=resume_id,
+        jd_text=jd_text,
+        match_score=match_score,
+        format_score=format_score,
+        overall_score=overall_score,
+        matched_skills=matched_skills,
+        missing_skills=missing_skills,
+        suggestions=suggestions
+    )
+    db.session.add(analysis)
+    db.session.commit()
+    return analysis
