@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Target, FileText, Briefcase, ChevronRight, Loader2, UploadCloud, Zap, Sparkles } from "lucide-react";
+import { Target, FileText, Briefcase, ChevronRight, Loader2, UploadCloud, Zap, Sparkles, CheckCircle2, Send } from "lucide-react";
 import { Link } from "react-router";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -13,6 +13,8 @@ export default function ApplicantDashboardHome() {
   const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
+  const [applyingJob, setApplyingJob] = useState<string | null>(null);
+  const [appliedJobs, setAppliedJobs] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const userId = localStorage.getItem("user_id");
@@ -20,7 +22,9 @@ export default function ApplicantDashboardHome() {
 
     const fetchDashboard = async () => {
       try {
-        const res = await axios.get(`${API}/applicants/${userId}/dashboard`);
+        const res = await axios.get(`${API}/applicants/${userId}/dashboard`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
+        });
         setData(res.data);
       } catch (err) {
         console.error("Failed to fetch dashboard data", err);
@@ -30,6 +34,25 @@ export default function ApplicantDashboardHome() {
     };
     fetchDashboard();
   }, []);
+
+  const handleApply = async (jobId: string) => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+    setApplyingJob(jobId);
+    try {
+      await axios.post(`${API}/jobs/${jobId}/apply`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAppliedJobs(prev => new Set([...prev, jobId]));
+    } catch (err: any) {
+      const msg = err.response?.data?.error || "";
+      if (msg.includes("already applied")) {
+        setAppliedJobs(prev => new Set([...prev, jobId]));
+      }
+    } finally {
+      setApplyingJob(null);
+    }
+  };
 
   const userName = data?.name || localStorage.getItem("user_name") || "there";
   const firstName = userName.split(" ")[0];
@@ -166,27 +189,56 @@ export default function ApplicantDashboardHome() {
               <div className="divide-y divide-slate-100">
                 {!recentJobs.length ? (
                   <div className="p-6 text-sm text-slate-500">No jobs are available yet.</div>
-                ) : recentJobs.slice(0, 4).map((job: any) => (
-                  <div key={job.job_id} className="p-4 hover:bg-slate-50 transition-colors">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-semibold text-slate-900">{job.title}</h3>
-                        <p className="text-xs text-slate-500">
-                          {job.recruiter_company || job.recruiter_name}
-                          {job.location ? ` • ${job.location}` : ""}
-                        </p>
+                ) : recentJobs.slice(0, 4).map((job: any) => {
+                  const isApplied = appliedJobs.has(job.job_id);
+                  const isApplying = applyingJob === job.job_id;
+                  return (
+                    <div key={job.job_id} className="p-4 hover:bg-slate-50 transition-colors">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="font-semibold text-slate-900">{job.title}</h3>
+                          <p className="text-xs text-slate-500">
+                            {job.location ? `${job.location}` : ""}
+                          </p>
+                        </div>
+                        {isApplied ? (
+                          <Badge className="bg-green-100 text-green-700 border-none flex items-center gap-1 shrink-0">
+                            <CheckCircle2 className="h-3 w-3" /> Applied
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100 border-none shrink-0">New</Badge>
+                        )}
                       </div>
-                      <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100 border-none">New</Badge>
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {(job.skills || []).slice(0, 3).map((skill: string) => (
+                          <Badge key={skill} variant="secondary" className="bg-white text-slate-700 border border-slate-200">
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
+                      <div className="mt-3">
+                        <Button
+                          size="sm"
+                          disabled={isApplied || isApplying || !data?.has_resume}
+                          onClick={() => handleApply(job.job_id)}
+                          className={`w-full gap-1.5 text-xs font-semibold ${
+                            isApplied
+                              ? "bg-green-50 text-green-700 border border-green-200 hover:bg-green-50"
+                              : "bg-[#1E3A5F] hover:bg-[#1E3A5F]/90 text-white"
+                          }`}
+                        >
+                          {isApplying ? (
+                            <><Loader2 className="h-3 w-3 animate-spin" /> Applying...</>
+                          ) : isApplied ? (
+                            <><CheckCircle2 className="h-3 w-3" /> Applied</>
+                          ) : (
+                            <><Send className="h-3 w-3" /> {data?.has_resume ? "Apply" : "Upload resume to apply"}</>
+                          )}
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-1.5 mt-3">
-                      {(job.skills || []).slice(0, 3).map((skill: string) => (
-                        <Badge key={skill} variant="secondary" className="bg-white text-slate-700 border border-slate-200">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>

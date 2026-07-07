@@ -34,13 +34,33 @@ export default function LoginPage() {
       if (userId) {
         localStorage.setItem("user_id", userId);
         localStorage.setItem("user_role", userRole);
-        if (response.data.name) {
-          localStorage.setItem("user_name", response.data.name);
-        }
-        if (response.data.avatar_url) {
-          localStorage.setItem("avatar_url", response.data.avatar_url);
-        } else {
-          localStorage.removeItem("avatar_url");
+        localStorage.setItem("access_token", response.data.access_token);
+
+        // Fetch the full profile right away so name/avatar appear immediately
+        // without needing to hit "Save Changes" on the profile page.
+        try {
+          const profileRes = await axios.get(`http://127.0.0.1:5000/api/profile/${userId}`);
+          const p = profileRes.data;
+          if (p.name) {
+            localStorage.setItem("user_name", p.name);
+          } else {
+            localStorage.removeItem("user_name");
+          }
+          if (p.avatar_url) {
+            localStorage.setItem("avatar_url", p.avatar_url);
+          } else {
+            localStorage.removeItem("avatar_url");
+          }
+          if (p.job_title) {
+            localStorage.setItem("user_job_title", p.job_title);
+          } else {
+            localStorage.removeItem("user_job_title");
+          }
+          if (p.company) {
+            localStorage.setItem("company", p.company);
+          }
+        } catch {
+          // Profile fetch failed — not critical, user can still log in
         }
       }
       

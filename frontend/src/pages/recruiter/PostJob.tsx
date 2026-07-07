@@ -50,6 +50,7 @@ export default function RecruiterPostJob() {
     }
 
     setIsSubmitting(true);
+    console.log('Posting job with token:', localStorage.getItem('access_token'));
     try {
       await axios.post("http://127.0.0.1:5000/api/jobs", {
         recruiter_id,
@@ -61,6 +62,10 @@ export default function RecruiterPostJob() {
         location,
         salary_min: salaryMin,
         salary_max: salaryMax
+      }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`
+        }
       });
       alert("Job posted successfully!");
       setTitle("");

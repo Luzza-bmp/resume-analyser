@@ -10,8 +10,7 @@ import { useAuth } from "@/app/context/AuthContext";
 const navItems = [
   { name: "Dashboard", href: "/recruiter/dashboard", icon: LayoutDashboard },
   { name: "Post Job", href: "/recruiter/post-job", icon: PlusSquare },
-  { name: "Candidates", href: "/recruiter/candidates", icon: Users },
-  { name: "Bulk Screen", href: "/recruiter/bulk-screen", icon: Sparkles },
+  { name: "Candidates", href: "/recruiter/bulk-screen", icon: Users },
   { name: "Profile", href: "/recruiter/profile", icon: User },
 ];
 

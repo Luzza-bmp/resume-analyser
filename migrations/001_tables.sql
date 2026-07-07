@@ -48,7 +48,14 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE public.applicants (
-    user_id uuid NOT NULL
+    user_id uuid NOT NULL,
+    name character varying(255),
+    email character varying(255),
+    phone character varying(50),
+    education text,
+    experience numeric,
+    skills text[],
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 

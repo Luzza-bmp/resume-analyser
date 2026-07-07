@@ -1,10 +1,11 @@
-flask 
+flask
 flask-sqlalchemy
 flask-jwt-extended
 psycopg2-binary
 python-dotenv
 bcrypt
 flask-cors
-pymupdf
+PyMuPDF
 python-docx
 spacy
+en-core-web-sm==3.8.0
