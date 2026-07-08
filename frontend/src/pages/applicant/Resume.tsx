@@ -89,57 +89,156 @@ export default function ApplicantResume() {
         <p className="text-slate-500 mt-1">Manage your document and extracted skills profile.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left Column: File Management */}
-        <div className="space-y-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Current Document</CardTitle>
-              <CardDescription>Your active resume used for job matching.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {resume ? (
-                <div className="p-4 border border-slate-200 rounded-xl bg-slate-50 flex items-start gap-4">
-                  <div className="h-12 w-12 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
-                    <FileText className="h-6 w-6 text-red-600" />
+      {resume ? (
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          {/* Left Column: PDF Resume Viewer (2/3 width) */}
+          <div className="xl:col-span-2 space-y-6">
+            <Card className="h-[750px] flex flex-col overflow-hidden shadow-md border-slate-200">
+              <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/50 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-800">
+                    <FileText className="h-5 w-5 text-red-500" /> Resume Document Preview
+                  </CardTitle>
+                  <CardDescription className="truncate max-w-[400px]">
+                    {resume.file_path || "Active Resume"}
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  <span className="text-xs text-green-600 font-semibold bg-green-50 px-2 py-1 rounded-md border border-green-200">Active</span>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0 flex-1 bg-slate-100">
+                <iframe
+                  src={`${API}/resumes/download/${resume.file_path}#toolbar=0`}
+                  className="w-full h-full border-none"
+                  title="Resume PDF Preview"
+                />
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column: AI Extraction & Details (1/3 width) */}
+          <div className="xl:col-span-1 space-y-6 flex flex-col">
+            {/* Extracted Profile Card */}
+            <Card className="flex-1 flex flex-col border-slate-200 shadow-sm">
+              <CardHeader className="pb-2 border-b border-slate-100">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="text-base font-bold">Extracted Profile</CardTitle>
+                    <CardDescription>AI-extracted skills & metadata.</CardDescription>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-slate-900 truncate">
-                      {resume.file_path || "Uploaded Resume"}
-                    </h4>
-                    <p className="text-sm text-slate-500 mt-1">
-                      Uploaded {new Date(resume.uploaded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      {" • "}{resume.skills.length} skills detected
-                    </p>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-                      <span className="text-xs text-green-600 font-medium">Active for matching</span>
+                  <Button variant="outline" size="sm" className="h-8 gap-1">
+                    <Edit3 className="h-3.5 w-3.5" /> Edit
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-6 flex-1 space-y-6">
+                {resume.skills.length > 0 ? (
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Extracted Skills ({resume.skills.length})</h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {resume.skills.map((skill: string, i: number) => (
+                          <Badge
+                            key={skill}
+                            className={i < 4
+                              ? "bg-[#1E3A5F] hover:bg-[#1E3A5F]/90 text-white px-2.5 py-0.5 text-xs font-semibold"
+                              : "bg-slate-100 text-slate-700 hover:bg-slate-200 px-2.5 py-0.5 text-xs font-normal"
+                            }
+                          >
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-5 border-t border-slate-100">
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Document Details</h4>
+                      <div className="space-y-2.5 text-xs text-slate-600">
+                        <p className="flex justify-between">
+                          <span className="font-semibold text-slate-500">File Name:</span>
+                          <span className="font-medium text-slate-800 truncate max-w-[200px]" title={resume.file_path}>{resume.file_path || "Resume.pdf"}</span>
+                        </p>
+                        <p className="flex justify-between">
+                          <span className="font-semibold text-slate-500">Uploaded On:</span>
+                          <span className="font-medium text-slate-800">
+                            {new Date(resume.uploaded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </span>
+                        </p>
+                        <p className="flex justify-between">
+                          <span className="font-semibold text-slate-500">Experience Extracted:</span>
+                          <span className="font-medium text-slate-800">{resume.experience_years || 0} Years</span>
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ) : (
-                <div className="p-4 border border-dashed border-slate-200 rounded-xl bg-slate-50/50 text-center">
-                  <p className="text-sm text-slate-500">No resume uploaded yet.</p>
-                </div>
-              )}
+                ) : (
+                  <div className="text-center py-6 text-slate-400 text-xs">
+                    No skills extracted yet.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-              {/* Upload drop zone */}
+            {/* Replace / Upload Actions Card */}
+            <Card className="border-slate-200 shadow-sm shrink-0">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-bold">Replace Document</CardTitle>
+                <CardDescription>Upload a new PDF to update your profile.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div
+                  className="border-2 border-dashed border-slate-200 hover:border-blue-500/70 hover:bg-slate-50 rounded-xl p-6 flex flex-col items-center justify-center text-center transition-colors cursor-pointer group"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                    {uploading ? (
+                      <Loader2 className="h-5 w-5 text-[#1E3A5F] animate-spin" />
+                    ) : (
+                      <UploadCloud className="h-5 w-5 text-[#1E3A5F]" />
+                    )}
+                  </div>
+                  <h4 className="font-bold text-slate-800 text-xs">
+                    {uploading ? "Analyzing new document..." : "Click to Replace"}
+                  </h4>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                    disabled={uploading}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      ) : (
+        <div className="max-w-xl mx-auto space-y-6">
+          <Card className="border-slate-200 shadow-md">
+            <CardHeader className="text-center">
+              <CardTitle>Upload your resume</CardTitle>
+              <CardDescription>We will automatically extract your skills to match you with top job opportunities.</CardDescription>
+            </CardHeader>
+            <CardContent>
               <div
-                className="border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-slate-50/50 hover:bg-slate-50 transition-colors cursor-pointer group"
+                className="border-2 border-dashed border-slate-200 rounded-xl p-12 flex flex-col items-center justify-center text-center bg-slate-50/50 hover:bg-slate-50 transition-colors cursor-pointer group"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <div className="h-14 w-14 rounded-full bg-blue-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   {uploading ? (
-                    <Loader2 className="h-6 w-6 text-[#1E3A5F] animate-spin" />
+                    <Loader2 className="h-7 w-7 text-[#1E3A5F] animate-spin" />
                   ) : (
-                    <UploadCloud className="h-6 w-6 text-[#1E3A5F]" />
+                    <UploadCloud className="h-7 w-7 text-[#1E3A5F]" />
                   )}
                 </div>
-                <h4 className="font-semibold text-slate-900">
-                  {uploading ? "Analyzing your resume..." : resume ? "Replace Resume" : "Upload Resume"}
+                <h4 className="font-bold text-slate-900 text-sm">
+                  {uploading ? "Analyzing resume..." : "Upload Resume PDF"}
                 </h4>
-                <p className="text-sm text-slate-500 mt-1 max-w-xs">
-                  {uploading ? "Extracting skills and building your profile..." : "Click to browse and upload your PDF resume."}
+                <p className="text-xs text-slate-500 mt-2 max-w-xs">
+                  {uploading ? "Extracting skills and building your profile..." : "Drag and drop your PDF file here, or click to browse."}
                 </p>
                 <input
                   ref={fileInputRef}
@@ -152,75 +251,8 @@ export default function ApplicantResume() {
               </div>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-br from-indigo-50 to-blue-50 border-indigo-100 shadow-sm">
-            <CardContent className="p-6 flex items-start gap-4">
-              <div className="h-10 w-10 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0">
-                <Sparkles className="h-5 w-5 text-indigo-600" />
-              </div>
-              <div>
-                <h4 className="font-bold text-indigo-900 mb-1">Build a resume with AI</h4>
-                <p className="text-sm text-indigo-700/80 mb-4">Don't have a solid resume yet? Use our AI builder to craft one tailored for tech roles.</p>
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
-                  Start Building
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </div>
-
-        {/* Right Column: Extracted Profile */}
-        <div className="space-y-8">
-          <Card className="h-full flex flex-col">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-slate-100">
-              <div>
-                <CardTitle>Extracted Profile</CardTitle>
-                <CardDescription>Skills our AI found in your document.</CardDescription>
-              </div>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Edit3 className="h-4 w-4" /> Edit
-              </Button>
-            </CardHeader>
-            <CardContent className="pt-6 flex-1">
-              {resume && resume.skills.length > 0 ? (
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-3">Verified Skills</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {resume.skills.map((skill: string, i: number) => (
-                        <Badge
-                          key={skill}
-                          className={i < 4
-                            ? "bg-[#1E3A5F] hover:bg-[#1E3A5F]/90 text-white px-3 py-1"
-                            : "bg-slate-100 text-slate-700 hover:bg-slate-200 px-3 py-1"
-                          }
-                        >
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="pt-6 border-t border-slate-100">
-                    <h4 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-3">Upload Details</h4>
-                    <div className="space-y-2 text-sm text-slate-600">
-                      <p><span className="font-medium text-slate-700">File:</span> {resume.file_path || "Resume"}</p>
-                      <p><span className="font-medium text-slate-700">Uploaded:</span> {new Date(resume.uploaded_at).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
-                      <p><span className="font-medium text-slate-700">Skills found:</span> {resume.skills.length}</p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-48 text-center">
-                  <FileText className="h-12 w-12 text-slate-200 mb-4" />
-                  <p className="text-slate-500 font-medium">No resume uploaded yet</p>
-                  <p className="text-sm text-slate-400 mt-1">Upload a PDF to extract your skills profile.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

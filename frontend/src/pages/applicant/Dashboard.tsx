@@ -6,6 +6,7 @@ import { Target, FileText, Briefcase, ChevronRight, Loader2, UploadCloud, Zap, S
 import { Link } from "react-router";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { ApplyJobModal } from "@/components/ApplyJobModal";
 
 const API = "http://localhost:5000/api";
 
@@ -13,46 +14,50 @@ export default function ApplicantDashboardHome() {
   const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
-  const [applyingJob, setApplyingJob] = useState<string | null>(null);
   const [appliedJobs, setAppliedJobs] = useState<Set<string>>(new Set());
+  const [selectedJobForModal, setSelectedJobForModal] = useState<any>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
-  useEffect(() => {
+  const fetchDashboard = async () => {
     const userId = localStorage.getItem("user_id");
     if (!userId) { setLoading(false); return; }
-
-    const fetchDashboard = async () => {
-      try {
-        const res = await axios.get(`${API}/applicants/${userId}/dashboard`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
-        });
-        setData(res.data);
-      } catch (err) {
-        console.error("Failed to fetch dashboard data", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDashboard();
-  }, []);
-
-  const handleApply = async (jobId: string) => {
-    const token = localStorage.getItem("access_token");
-    if (!token) return;
-    setApplyingJob(jobId);
     try {
-      await axios.post(`${API}/jobs/${jobId}/apply`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await axios.get(`${API}/applicants/${userId}/dashboard`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
       });
-      setAppliedJobs(prev => new Set([...prev, jobId]));
-    } catch (err: any) {
-      const msg = err.response?.data?.error || "";
-      if (msg.includes("already applied")) {
-        setAppliedJobs(prev => new Set([...prev, jobId]));
-      }
+      setData(res.data);
+    } catch (err) {
+      console.error("Failed to fetch dashboard data", err);
     } finally {
-      setApplyingJob(null);
+      setLoading(false);
     }
   };
+
+  const fetchAppliedJobs = async () => {
+    const userId = localStorage.getItem("user_id");
+    if (!userId) return;
+    try {
+      const res = await axios.get(`${API}/applicants/${userId}/applications`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
+      });
+      setAppliedJobs(new Set(res.data.applied_job_ids || []));
+    } catch (err) {
+      console.error("Failed to fetch applied jobs", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboard();
+    fetchAppliedJobs();
+  }, []);
+
+  const handleApplySuccess = (jobId: string) => {
+    setAppliedJobs(prev => new Set([...prev, jobId]));
+    // Refresh stats (average score, resume name etc.)
+    fetchDashboard();
+  };
+
+
 
   const userName = data?.name || localStorage.getItem("user_name") || "there";
   const firstName = userName.split(" ")[0];
@@ -167,9 +172,10 @@ export default function ApplicantDashboardHome() {
                     <Badge className={job.matching_score >= 85 ? 'bg-green-100 text-green-700 hover:bg-green-100' : 'bg-orange-100 text-orange-700 hover:bg-orange-100'}>
                       {job.matching_score}% Match
                     </Badge>
-                    <Link to="/applicant/matches">
-                      <Button variant="outline" size="sm">View</Button>
-                    </Link>
+                    <Button variant="outline" size="sm" onClick={() => {
+                      setSelectedJobForModal(job);
+                      setModalOpen(true);
+                    }}>View</Button>
                   </div>
                 </div>
               ))}
@@ -191,7 +197,6 @@ export default function ApplicantDashboardHome() {
                   <div className="p-6 text-sm text-slate-500">No jobs are available yet.</div>
                 ) : recentJobs.slice(0, 4).map((job: any) => {
                   const isApplied = appliedJobs.has(job.job_id);
-                  const isApplying = applyingJob === job.job_id;
                   return (
                     <div key={job.job_id} className="p-4 hover:bg-slate-50 transition-colors">
                       <div className="flex items-start justify-between gap-3">
@@ -219,20 +224,20 @@ export default function ApplicantDashboardHome() {
                       <div className="mt-3">
                         <Button
                           size="sm"
-                          disabled={isApplied || isApplying || !data?.has_resume}
-                          onClick={() => handleApply(job.job_id)}
+                          onClick={() => {
+                            setSelectedJobForModal(job);
+                            setModalOpen(true);
+                          }}
                           className={`w-full gap-1.5 text-xs font-semibold ${
                             isApplied
                               ? "bg-green-50 text-green-700 border border-green-200 hover:bg-green-50"
                               : "bg-[#1E3A5F] hover:bg-[#1E3A5F]/90 text-white"
                           }`}
                         >
-                          {isApplying ? (
-                            <><Loader2 className="h-3 w-3 animate-spin" /> Applying...</>
-                          ) : isApplied ? (
+                          {isApplied ? (
                             <><CheckCircle2 className="h-3 w-3" /> Applied</>
                           ) : (
-                            <><Send className="h-3 w-3" /> {data?.has_resume ? "Apply" : "Upload resume to apply"}</>
+                            <><Send className="h-3 w-3" /> Apply & Score</>
                           )}
                         </Button>
                       </div>
@@ -312,6 +317,13 @@ export default function ApplicantDashboardHome() {
           </Card>
         </div>
       </div>
+      <ApplyJobModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        job={selectedJobForModal}
+        applied={selectedJobForModal ? appliedJobs.has(selectedJobForModal.job_id) : false}
+        onApplySuccess={handleApplySuccess}
+      />
     </div>
   );
 }

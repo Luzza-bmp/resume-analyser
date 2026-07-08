@@ -1,0 +1,7 @@
+# Pyrefly configuration
+# Points Pyrefly to the virtual environment Python so it can resolve
+# all installed packages (sqlalchemy, flask, psycopg2, etc.)
+python_interpreter = ".venv/Scripts/python.exe"
+
+[project]
+name = "SipSetu"

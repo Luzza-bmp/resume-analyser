@@ -15,6 +15,53 @@ def get_matched_skills(resume_skills, jd_skills):
     return sorted(list(set(resume_skills) & set(jd_skills)))
 
 
+# Maps experience_level field values to (min_years, max_years) ranges
+EXPERIENCE_LEVEL_MAP = {
+    "fresher": (0, 1),
+    "1-3":     (1, 3),
+    "3-5":     (3, 5),
+    "5+":      (5, 99),
+}
+
+
+def score_experience(candidate_years: float, job_experience_level: str) -> float:
+    """
+    Returns an experience score 0-100 based on how well the candidate's
+    extracted years match the job's required experience level.
+
+    Scoring logic:
+    - Candidate meets the range fully         → 100
+    - Candidate is within 1 year below min    → 70  (almost there)
+    - Candidate is within 2 years below min   → 40  (under-qualified)
+    - Candidate is 2+ years below min         → 10  (significantly under-qualified)
+    - Candidate is over the max (over-qualified) → 80 (slight penalty, still capable)
+    - No experience_level set on job          → 100 (no requirement = full marks)
+    """
+    if not job_experience_level:
+        return 100.0
+
+    level = job_experience_level.lower().strip()
+    if level not in EXPERIENCE_LEVEL_MAP:
+        return 100.0  # Unknown level → no penalty
+
+    min_years, max_years = EXPERIENCE_LEVEL_MAP[level]
+    years = float(candidate_years or 0)
+
+    if min_years <= years <= max_years:
+        return 100.0
+    elif years > max_years:
+        # Over-qualified — still capable, small penalty
+        return 80.0
+    else:
+        gap = min_years - years
+        if gap <= 1:
+            return 70.0
+        elif gap <= 2:
+            return 40.0
+        else:
+            return 10.0
+
+
 def score_format(parsed_data):
     score = 0
     if parsed_data.get("name"):
@@ -32,3 +79,13 @@ def score_format(parsed_data):
 
 def overall_score(match_score, format_score):
     return round(match_score * 0.70 + format_score * 0.30, 2)
+
+
+def composite_ranking_score(match_score: float, experience_score: float) -> float:
+    """
+    Composite score used ONLY for ranking candidates in the recruiter view.
+    Weights:
+      - Skill match score : 70%
+      - Experience score  : 30%
+    """
+    return round(match_score * 0.70 + experience_score * 0.30, 2)

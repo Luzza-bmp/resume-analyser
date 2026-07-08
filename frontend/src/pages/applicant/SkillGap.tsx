@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ExternalLink, Target, CheckCircle2, ChevronDown, ChevronUp, Loader2, UploadCloud } from "lucide-react";
+import { ExternalLink, Target, CheckCircle2, ChevronDown, ChevronUp, Loader2, UploadCloud, FileUp, BookOpen, Info } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Link } from "react-router";
@@ -66,7 +66,9 @@ export default function ApplicantSkillGap() {
         const url = selectedJobId === "all"
           ? `${API}/applicants/${userId}/skill-gap`
           : `${API}/applicants/${userId}/skill-gap?job_id=${selectedJobId}`;
-        const res = await axios.get(url);
+        const res = await axios.get(url, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
+        });
         setGapData(res.data);
         // Auto-open first item
         if (res.data.missing_skills?.length > 0) {
@@ -74,7 +76,7 @@ export default function ApplicantSkillGap() {
         }
         setHasResume(true);
       } catch (err: any) {
-        if (err.response?.status === 404) setHasResume(false);
+        if (err.response?.status === 404 || !localStorage.getItem("access_token")) setHasResume(false);
         setGapData(null);
       } finally {
         setGapLoading(false);
@@ -227,32 +229,54 @@ export default function ApplicantSkillGap() {
 
           {/* Right Column: Readiness & Strengths */}
           <div className="space-y-6">
-            <Card className="bg-[#1E3A5F] text-white border-none shadow-lg">
-              <CardContent className="p-8 text-center">
-                <div className="relative w-32 h-32 mx-auto mb-6">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" className="text-white/20 stroke-current" strokeWidth="8" fill="none" />
-                    <circle cx="50" cy="50" r="40" className="text-[#F97316] stroke-current" strokeWidth="8" fill="none"
-                      strokeDasharray="251.2"
-                      strokeDashoffset={251.2 - (251.2 * (gapData.readiness_score || 0)) / 100}
+            <Card className="border-none shadow-lg overflow-hidden">
+              {/* Score Header */}
+              <div className={`p-6 text-center ${
+                (gapData.readiness_score || 0) >= 80 ? 'bg-green-600' :
+                (gapData.readiness_score || 0) >= 50 ? 'bg-[#1E3A5F]' : 'bg-red-700'
+              } text-white`}>
+                <p className="text-xs font-bold uppercase tracking-widest text-white/70 mb-3">Role Readiness Score</p>
+                {/* Ring */}
+                <div className="relative w-28 h-28 mx-auto mb-4">
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="38" stroke="rgba(255,255,255,0.2)" strokeWidth="9" fill="none" />
+                    <circle cx="50" cy="50" r="38"
+                      stroke="#F97316"
+                      strokeWidth="9"
+                      fill="none"
+                      strokeDasharray={`${2 * Math.PI * 38}`}
+                      strokeDashoffset={`${2 * Math.PI * 38 * (1 - (gapData.readiness_score || 0) / 100)}`}
                       strokeLinecap="round"
                     />
                   </svg>
-                  <div className="absolute inset-0 flex items-center justify-center flex-col">
-                    <span className="text-4xl font-bold">{gapData.readiness_score || 0}<span className="text-xl">%</span></span>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-3xl font-black">{gapData.readiness_score ?? 0}<span className="text-base font-semibold">%</span></span>
                   </div>
                 </div>
-                <h3 className="text-xl font-bold mb-2">Role Readiness</h3>
-                <p className="text-blue-100 text-sm mb-6">
-                  {gapData.readiness_score >= 80
-                    ? "You're highly ready for this role! Just a few gaps to fill."
-                    : gapData.readiness_score >= 50
-                    ? "You have a solid foundation, but addressing skill gaps will boost your chances."
-                    : "Focus on learning the missing skills to improve your match significantly."}
+                <p className="text-sm text-white/80 leading-relaxed">
+                  {(gapData.readiness_score || 0) >= 80
+                    ? "🎯 Strong match — you're nearly ready!"
+                    : (gapData.readiness_score || 0) >= 50
+                    ? "📈 Good foundation — close the skill gaps to stand out."
+                    : "🛠 Build missing skills to significantly improve your match."}
                 </p>
-                <Button className="w-full bg-[#F97316] hover:bg-[#F97316]/90 text-white border-none">
-                  Boost Your Profile
-                </Button>
+              </div>
+              {/* Info + CTA */}
+              <CardContent className="p-5 bg-white space-y-4">
+                <div className="flex items-start gap-2 text-xs text-slate-500 bg-slate-50 border border-slate-100 rounded-lg p-3">
+                  <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-slate-400" />
+                  <span>
+                    This score shows how well your current resume skills match the selected job's requirements.
+                    Expand each missing skill below to see where to learn it.
+                  </span>
+                </div>
+                <Link to="/applicant/resume" className="block">
+                  <Button className="w-full bg-[#1E3A5F] hover:bg-[#1E3A5F]/90 text-white gap-2">
+                    <FileUp className="h-4 w-4" />
+                    Update My Resume
+                  </Button>
+                </Link>
+                <p className="text-center text-xs text-slate-400">Upload a newer resume to re-run the analysis</p>
               </CardContent>
             </Card>
 

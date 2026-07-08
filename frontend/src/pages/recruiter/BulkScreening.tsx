@@ -43,6 +43,8 @@ interface Candidate {
   missing_skills: string[];
   match_score: number;
   experience_years: number;
+  experience_score: number;
+  composite_score: number;
   status: "applied" | "reviewed" | "shortlisted" | "rejected";
   applied_at: string;
 }
@@ -349,16 +351,24 @@ export default function RecruiterBulkScreening() {
 
                             {/* Score + Actions */}
                             <div className="flex items-center gap-4 shrink-0">
-                              <div className="text-center hidden md:block">
-                                <p className={`text-2xl font-black ${scoreColor(candidate.match_score)}`}>
-                                  {candidate.match_score}%
-                                </p>
-                                <p className="text-[9px] font-bold uppercase text-slate-400">Match</p>
-                                <div className="w-16 h-1.5 rounded-full bg-slate-100 mt-1 overflow-hidden">
-                                  <div
-                                    className={`h-full rounded-full ${scoreBg(candidate.match_score)}`}
-                                    style={{ width: `${candidate.match_score}%` }}
-                                  />
+                              <div className="hidden md:flex flex-col gap-1.5 items-end">
+                                {/* Composite Score (primary ranking score) */}
+                                <div className="text-center">
+                                  <p className={`text-2xl font-black ${scoreColor(candidate.composite_score ?? candidate.match_score)}`}>
+                                    {(candidate.composite_score ?? candidate.match_score).toFixed(0)}%
+                                  </p>
+                                  <p className="text-[9px] font-bold uppercase text-slate-400">Overall</p>
+                                  <div className="w-16 h-1.5 rounded-full bg-slate-100 mt-1 overflow-hidden">
+                                    <div
+                                      className={`h-full rounded-full ${scoreBg(candidate.composite_score ?? candidate.match_score)}`}
+                                      style={{ width: `${candidate.composite_score ?? candidate.match_score}%` }}
+                                    />
+                                  </div>
+                                </div>
+                                {/* Sub-scores */}
+                                <div className="flex gap-2 text-[9px] text-slate-400 font-medium">
+                                  <span>Skills: <span className="text-slate-700">{candidate.match_score}%</span></span>
+                                  <span>Exp: <span className="text-slate-700">{(candidate.experience_score ?? 100).toFixed(0)}%</span></span>
                                 </div>
                               </div>
 

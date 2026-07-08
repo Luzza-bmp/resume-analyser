@@ -4,9 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, MapPin, Clock, Briefcase, Send, Loader2, UploadCloud } from "lucide-react";
+import { Search, MapPin, Clock, Briefcase, Send, Loader2, UploadCloud, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router";
 import axios from "axios";
+import { ApplyJobModal } from "@/components/ApplyJobModal";
 
 const API = "http://localhost:5000/api";
 
@@ -16,25 +17,50 @@ export default function ApplicantJobMatches() {
   const [loading, setLoading] = useState(true);
   const [jobs, setJobs] = useState<any[]>([]);
   const [hasResume, setHasResume] = useState(true);
+  const [appliedJobs, setAppliedJobs] = useState<Set<string>>(new Set());
+  const [selectedJobForModal, setSelectedJobForModal] = useState<any>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
-  useEffect(() => {
+  const fetchMatches = async () => {
     const userId = localStorage.getItem("user_id");
     if (!userId) { setLoading(false); return; }
+    try {
+      const res = await axios.get(`${API}/applicants/${userId}/matched-jobs?per_page=50`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
+      });
+      setJobs(res.data.matched_jobs || []);
+      if (res.data.resume_id === null) setHasResume(false);
+      else setHasResume(true);
+    } catch (err) {
+      console.error("Failed to load job matches", err);
+      setHasResume(false);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const fetchMatches = async () => {
-      try {
-        const res = await axios.get(`${API}/applicants/${userId}/matched-jobs?per_page=50`);
-        setJobs(res.data.matched_jobs || []);
-        if (res.data.resume_id === null) setHasResume(false);
-      } catch (err) {
-        console.error("Failed to load job matches", err);
-        setHasResume(false);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchAppliedJobs = async () => {
+    const userId = localStorage.getItem("user_id");
+    if (!userId) return;
+    try {
+      const res = await axios.get(`${API}/applicants/${userId}/applications`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
+      });
+      setAppliedJobs(new Set(res.data.applied_job_ids || []));
+    } catch (err) {
+      console.error("Failed to fetch applied jobs", err);
+    }
+  };
+
+  useEffect(() => {
     fetchMatches();
+    fetchAppliedJobs();
   }, []);
+
+  const handleApplySuccess = (jobId: string) => {
+    setAppliedJobs(prev => new Set([...prev, jobId]));
+    fetchMatches();
+  };
 
   const filteredJobs = jobs.filter(j => {
     const matchesSearch = j.title.toLowerCase().includes(search.toLowerCase())
@@ -187,8 +213,26 @@ export default function ApplicantJobMatches() {
 
                 <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                   <span className="text-xs text-slate-400">{formatPosted(job.created_at)}</span>
-                  <Button className="bg-[#F97316] hover:bg-[#F97316]/90 text-white gap-2">
-                    <Send className="h-4 w-4" /> Apply Now
+                  <Button
+                    onClick={() => {
+                      setSelectedJobForModal(job);
+                      setModalOpen(true);
+                    }}
+                    className={`${
+                      appliedJobs.has(job.job_id)
+                        ? "bg-green-50 text-green-700 border border-green-200 hover:bg-green-50 hover:text-green-700"
+                        : "bg-[#F97316] hover:bg-[#F97316]/90 text-white"
+                    } gap-2`}
+                  >
+                    {appliedJobs.has(job.job_id) ? (
+                      <>
+                        <CheckCircle2 className="h-4 w-4" /> Applied
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4" /> Apply & Score
+                      </>
+                    )}
                   </Button>
                 </div>
               </CardContent>
@@ -196,6 +240,13 @@ export default function ApplicantJobMatches() {
           ))}
         </div>
       )}
+      <ApplyJobModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        job={selectedJobForModal}
+        applied={selectedJobForModal ? appliedJobs.has(selectedJobForModal.job_id) : false}
+        onApplySuccess={handleApplySuccess}
+      />
     </div>
   );
 }
