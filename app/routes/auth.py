@@ -36,11 +36,24 @@ def register():
     new_user = User(email=email, password_hash=password_hash, role=role)
     db.session.add(new_user)
     db.session.commit()
-    # If the user is a recruiter, create a corresponding Recruiter entry
+    # Create Applicant entry for applicant role
+    if role == 'applicant':
+        from app.models import Applicant
+        applicant = Applicant(user_id=new_user.user_id, name=data.get('name'), email=new_user.email)
+        db.session.add(applicant)
+        db.session.commit()
+
     if role == 'recruiter':
         recruiter = Recruiter(user_id=new_user.user_id, email=new_user.email)
         db.session.add(recruiter)
         db.session.commit()
+
+    return jsonify({
+        "message": "User registered successfully",
+        "user_id": str(new_user.user_id),
+        "email": new_user.email,
+        "role": new_user.role
+    }), 201
 
 
 @auth_bp.route("/login", methods=["POST"])

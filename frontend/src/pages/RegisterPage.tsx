@@ -26,23 +26,29 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
     try {
-      const response = await axios.post("http://127.0.0.1:5000/api/auth/register", {
+      // Step 1: Register the user
+      await axios.post("http://127.0.0.1:5000/api/auth/register", {
         name,
         email,
         password,
         role
       });
-      
-      const userId = response.data.user_id;
-      if (userId) {
-        localStorage.setItem("user_id", userId);
-        localStorage.setItem("user_role", role);
-        localStorage.setItem("user_name", name);
-      }
-      
-      // Auto-login after registration could go here
-      // For now just redirect
-      if (role === "applicant") {
+
+      // Step 2: Auto-login to get access token
+      const loginResponse = await axios.post("http://127.0.0.1:5000/api/auth/login", {
+        email,
+        password
+      });
+
+      const userId = loginResponse.data.user_id;
+      const userRole = loginResponse.data.role || role;
+
+      localStorage.setItem("user_id", userId);
+      localStorage.setItem("user_role", userRole);
+      localStorage.setItem("access_token", loginResponse.data.access_token);
+      localStorage.setItem("user_name", name);
+
+      if (userRole === "applicant") {
         navigate("/applicant/dashboard");
       } else {
         navigate("/recruiter/dashboard");
