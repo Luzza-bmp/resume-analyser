@@ -98,3 +98,8 @@ def me():
         "email": user.email,
         "role": user.role
     }), 200
+
+
+@auth_bp.route("/logout", methods=["POST"])
+def logout():
+    return jsonify({"message": "Logged out successfully"}), 200

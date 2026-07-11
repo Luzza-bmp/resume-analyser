@@ -58,6 +58,8 @@ export default function LoginPage() {
           }
           if (p.company) {
             localStorage.setItem("company", p.company);
+          } else {
+            localStorage.removeItem("company");
           }
         } catch {
           // Profile fetch failed — not critical, user can still log in

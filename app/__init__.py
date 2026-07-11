@@ -176,6 +176,10 @@ def create_app():
     app.register_blueprint(jobs_bp, url_prefix="/api/jobs")
     from app.routes.applicant_dashboard import dashboard_bp
     app.register_blueprint(dashboard_bp, url_prefix="/api/applicants")
+    from app.routes.recruiter_dashboard import recruiter_dashboard_bp
+    app.register_blueprint(recruiter_dashboard_bp, url_prefix="/api/recruiters")
+    from app.routes.public import public_bp
+    app.register_blueprint(public_bp, url_prefix="/api/public")
 
     with app.app_context():
         # WARNING: This drops all tables and recreates them from models.

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Users, UserCheck, TrendingUp, ChevronRight, FileText } from "lucide-react";
+import { Briefcase, Users, UserCheck, TrendingUp, ChevronRight, FileText, CheckCircle2, ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -22,7 +22,10 @@ export default function RecruiterDashboardHome() {
 
     const fetchDashboard = async () => {
       try {
-        const response = await axios.get(`${API}/recruiters/${userId}/dashboard`);
+        const token = localStorage.getItem("access_token");
+        const response = await axios.get(`${API}/recruiters/${userId}/dashboard`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setData(response.data);
       } catch (err) {
         console.error("Failed to fetch recruiter dashboard", err);
@@ -110,81 +113,154 @@ export default function RecruiterDashboardHome() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Top Candidates */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-slate-100">
-            <CardTitle className="text-lg font-bold">Top Matches (AI Ranked)</CardTitle>
-            <Link to="/recruiter/candidates">
-              <Button variant="ghost" size="sm" className="text-slate-500 hover:text-[#1E3A5F]">
-                View All <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </Link>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-slate-100">
-              {topCandidates.length === 0 ? (
-                <div className="p-8 text-center text-slate-500">No ranked candidates yet. Upload resumes and create jobs to see matches.</div>
-              ) : topCandidates.map((candidate: any) => (
-                <div key={`${candidate.applicant_id}-${candidate.job_title}`} className="p-4 flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors group min-w-0">
-                  <div className="flex items-center gap-4 min-w-0 flex-1">
-                    <div className="h-10 w-10 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center font-semibold text-sm">
-                      {candidate.applicant_name.split(' ').map((n: string) => n[0]).join('')}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-slate-900">{candidate.applicant_name}</h3>
-                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none h-5 text-[10px]">
-                          {candidate.matching_score}% Match
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-slate-500 truncate">{candidate.job_title}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 shrink-0">
-                    <div className="hidden md:flex flex-wrap gap-1.5 max-w-[320px] min-w-0">
-                      {candidate.resume_skills.map((s: string) => <Badge key={s} variant="outline" className="text-xs text-slate-500 whitespace-normal break-words">{s}</Badge>)}
-                    </div>
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <FileText className="h-3.5 w-3.5" /> Resume
+      {activeJobs.length === 0 ? (
+        <div className="space-y-8">
+          {/* Onboarding Banner */}
+          <Card className="border-none bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 text-white shadow-xl overflow-hidden rounded-2xl relative">
+            <CardContent className="p-8 md:p-10 relative z-10">
+              <div className="max-w-3xl space-y-6">
+                <Badge className="bg-white/20 text-white hover:bg-white/30 border-none px-3 py-1 text-xs font-semibold uppercase tracking-wider">
+                  Getting Started Guide
+                </Badge>
+                <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+                  Welcome to SipSetu, {userName.split(' ')[0]}! 🚀
+                </h2>
+                <p className="text-blue-100 text-base md:text-lg leading-relaxed">
+                  Your recruitment workspace is ready. With SipSetu's advanced AI matching engine, you can publish job openings, receive parsed resumes, and automatically rank candidates by matching score.
+                </p>
+                <div className="pt-4 flex flex-wrap gap-4">
+                  <Link to="/recruiter/post-job">
+                    <Button className="bg-[#F97316] hover:bg-[#F97316]/90 text-white font-bold px-6 py-6 rounded-xl shadow-lg shadow-orange-500/30 border-none transition-all hover:scale-[1.02]">
+                      Create Your First Job Posting <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
-                  </div>
+                  </Link>
+                  <Link to="/recruiter/profile">
+                    <Button variant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white/20 font-bold px-6 py-6 rounded-xl transition-all">
+                      Complete Company Profile
+                    </Button>
+                  </Link>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+              <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none transform translate-y-1/4 translate-x-1/4">
+                <Briefcase size={320} />
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Recent Postings */}
-        <Card>
-          <CardHeader className="pb-2 border-b border-slate-100">
-            <CardTitle className="text-lg font-bold">Active Job Postings</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-slate-100">
-              {activeJobs.length === 0 ? (
-                <div className="p-8 text-center text-slate-500">No active job postings yet.</div>
-              ) : activeJobs.map((post: any) => (
-                <div key={post.job_id} className="p-4 hover:bg-slate-50 transition-colors">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-semibold text-slate-900">{post.title}</h4>
-                    <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-200">Active</Badge>
-                  </div>
-                  <div className="flex justify-between items-center text-sm text-slate-500">
-                    <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> {data?.total_candidates ?? 0} Candidates</span>
-                    <span>{post.created_at ? new Date(post.created_at).toLocaleDateString() : "Recent"}</span>
-                  </div>
+          {/* AI Matching explainer */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="border-none shadow-md bg-white">
+              <CardContent className="p-6 space-y-4">
+                <div className="h-12 w-12 rounded-2xl bg-orange-50 flex items-center justify-center">
+                  <Sparkles className="h-6 w-6 text-[#F97316]" />
                 </div>
-              ))}
-            </div>
-            <div className="p-3 bg-slate-50 border-t border-slate-100 text-center rounded-b-xl">
-              <Link to="/recruiter/dashboard" className="text-sm font-medium text-[#1E3A5F] hover:underline">
-                View all postings
+                <h3 className="text-lg font-bold text-slate-900">1. Define Job Skills</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  Specify the precise programming languages, frameworks, or experience required when posting your job.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-md bg-white">
+              <CardContent className="p-6 space-y-4">
+                <div className="h-12 w-12 rounded-2xl bg-blue-50 flex items-center justify-center">
+                  <Users className="h-6 w-6 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900">2. Auto-Rank Candidates</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  Our semantic parsing model instantly extracts candidate profiles, ranking applicants by overall skill compatibility.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-md bg-white">
+              <CardContent className="p-6 space-y-4">
+                <div className="h-12 w-12 rounded-2xl bg-green-50 flex items-center justify-center">
+                  <CheckCircle2 className="h-6 w-6 text-green-600" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900">3. Shortlist Instantly</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  Filter applicants directly, compare match breakdowns, and shortlist candidates with a single click.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Top Candidates */}
+          <Card className="lg:col-span-2 shadow-md border-none">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-slate-100">
+              <CardTitle className="text-lg font-bold flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-[#F97316]" /> Top Matches (AI Ranked)
+              </CardTitle>
+              <Link to="/recruiter/candidates">
+                <Button variant="ghost" size="sm" className="text-slate-500 hover:text-[#1E3A5F]">
+                  View All <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
               </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-slate-100">
+                {topCandidates.map((candidate: any) => (
+                  <div key={`${candidate.applicant_id}-${candidate.job_title}`} className="p-4 flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors group min-w-0">
+                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                      <div className="h-10 w-10 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center font-semibold text-sm">
+                        {candidate.applicant_name.split(' ').map((n: string) => n[0]).join('')}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-slate-900">{candidate.applicant_name}</h3>
+                          <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none h-5 text-[10px]">
+                            {candidate.matching_score}% Match
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-slate-500 truncate">{candidate.job_title}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 shrink-0">
+                      <div className="hidden md:flex flex-wrap gap-1.5 max-w-[320px] min-w-0">
+                        {candidate.resume_skills.map((s: string) => <Badge key={s} variant="outline" className="text-xs text-slate-500 whitespace-normal break-words">{s}</Badge>)}
+                      </div>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <FileText className="h-3.5 w-3.5" /> Resume
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Postings */}
+          <Card className="shadow-md border-none">
+            <CardHeader className="pb-2 border-b border-slate-100">
+              <CardTitle className="text-lg font-bold">Active Job Postings</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-slate-100">
+                {activeJobs.map((post: any) => (
+                  <div key={post.job_id} className="p-4 hover:bg-slate-50 transition-colors">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-semibold text-slate-900">{post.title}</h4>
+                      <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-200">{post.status || 'Active'}</Badge>
+                    </div>
+                    <div className="flex justify-between items-center text-sm text-slate-500">
+                      <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> {post.candidates_count ?? 0} Candidates</span>
+                      <span>{post.created_at ? new Date(post.created_at).toLocaleDateString() : "Recent"}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="p-3 bg-slate-50 border-t border-slate-100 text-center rounded-b-xl">
+                <Link to="/recruiter/dashboard" className="text-sm font-medium text-[#1E3A5F] hover:underline">
+                  View all postings
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

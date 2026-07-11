@@ -43,6 +43,9 @@ export default function RegisterPage() {
       const userId = loginResponse.data.user_id;
       const userRole = loginResponse.data.role || role;
 
+      localStorage.removeItem("avatar_url");
+      localStorage.removeItem("user_job_title");
+      localStorage.removeItem("company");
       localStorage.setItem("user_id", userId);
       localStorage.setItem("user_role", userRole);
       localStorage.setItem("access_token", loginResponse.data.access_token);
