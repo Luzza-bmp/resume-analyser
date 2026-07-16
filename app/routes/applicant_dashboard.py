@@ -68,8 +68,6 @@ def get_dashboard(applicant_id):
     ) or 0
     avg_match = round(float(avg_match), 2)
 
-    # Existing resume and analysis logic above ...
-    # (Lines 32-68 unchanged)
     # Add job listings for applicant view
     from app.models import Job
     # Recent jobs: latest 4 published jobs
@@ -117,24 +115,19 @@ def get_matched_jobs(applicant_id):
         .order_by(Resume.uploaded_at.desc())
         .first()
     )
-    if not resume:
-        return jsonify({
-            "resume_id": None,
-            "matched_jobs": []
-        }), 200
 
     from app.models import Job, Recruiter
     jobs = Job.query.filter_by(status='published').all()
-    
+
     matched_list = []
-    resume_skills = set(s.lower() for s in (resume.skills or []))
-    
+    resume_skills = set(s.lower() for s in (resume.skills or [])) if resume else set()
+
     for job in jobs:
         recruiter = Recruiter.query.get(job.recruiter_id)
         job_skills = set(s.lower() for s in (job.skills or []))
-        overlap = resume_skills & job_skills
-        match_score = round(len(overlap) / len(job_skills) * 100) if job_skills else 0
-        
+        overlap = resume_skills & job_skills if resume else set()
+        match_score = round(len(overlap) / len(job_skills) * 100) if job_skills and resume else 0
+
         matched_list.append({
             "job_id": str(job.job_id),
             "title": job.title,
@@ -150,12 +143,12 @@ def get_matched_jobs(applicant_id):
             "matching_score": match_score,
             "created_at": job.created_at.isoformat() if job.created_at else None,
         })
-        
+
     # Sort by matching_score descending
     matched_list.sort(key=lambda x: x["matching_score"], reverse=True)
-    
+
     return jsonify({
-        "resume_id": str(resume.resume_id),
+        "resume_id": str(resume.resume_id) if resume else None,
         "matched_jobs": matched_list
     }), 200
 

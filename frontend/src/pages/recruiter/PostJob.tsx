@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 
 export default function RecruiterPostJob() {
+  // original behavior: use browser alerts
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
@@ -38,8 +39,8 @@ export default function RecruiterPostJob() {
   const handlePostJob = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title) {
-        alert("Please enter a job title");
-        return;
+      alert("Please enter a job title");
+      return;
     }
 
     const minSalary = Number(salaryMin);
