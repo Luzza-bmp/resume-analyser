@@ -1,3 +1,6 @@
+import math
+
+
 def calculate_match_score(resume_skills, jd_skills):
     if not jd_skills:
         return 0.0
@@ -5,6 +8,26 @@ def calculate_match_score(resume_skills, jd_skills):
     jd_set = set(jd_skills)
     matched = resume_set & jd_set
     return round(len(matched) / len(jd_set) * 100, 2)
+
+
+def cosine_similarity(resume_skills, jd_skills):
+    """Return cosine similarity between two skill lists as a percentage."""
+    if not jd_skills:
+        return 0.0
+
+    resume_vector = {skill.lower().strip(): 1 for skill in resume_skills if skill}
+    jd_vector = {skill.lower().strip(): 1 for skill in jd_skills if skill}
+
+    if not resume_vector or not jd_vector:
+        return 0.0
+
+    shared = set(resume_vector) & set(jd_vector)
+    if not shared:
+        return 0.0
+
+    dot_product = len(shared)
+    magnitude = math.sqrt(len(resume_vector) * len(jd_vector))
+    return round((dot_product / magnitude) * 100, 2)
 
 
 def get_missing_skills(resume_skills, jd_skills):
@@ -81,11 +104,12 @@ def overall_score(match_score, format_score):
     return round(match_score * 0.70 + format_score * 0.30, 2)
 
 
-def composite_ranking_score(match_score: float, experience_score: float) -> float:
+def composite_ranking_score(match_score: float, experience_score: float, cosine_score: float = 0.0) -> float:
     """
     Composite score used ONLY for ranking candidates in the recruiter view.
     Weights:
-      - Skill match score : 70%
-      - Experience score  : 30%
+      - Skill match score : 60%
+      - Cosine similarity : 20%
+      - Experience score  : 20%
     """
-    return round(match_score * 0.70 + experience_score * 0.30, 2)
+    return round(match_score * 0.60 + cosine_score * 0.20 + experience_score * 0.20, 2)

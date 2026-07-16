@@ -1,8 +1,43 @@
+# Node / frontend
 node_modules/
+frontend/node_modules/
 dist/
-.env
+frontend/dist/
+build/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
 venv/
-__pycache__/
-*.pyc
-__pycache__/
-*.pyc
+env/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Runtime artifacts
+uploads/*
+!uploads/.gitkeep
+!uploads/avatars/.gitkeep
+*.log
+*.sqlite
+*.db
+
+# Local tooling
+.DS_Store
+*.swp
+
+# Training / model artifacts
+training/*.spacy
+training/output_model/

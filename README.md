@@ -98,32 +98,23 @@ Navigate to **http://localhost:5173** in your browser. Register as a Job Seeker 
 
 ```
 SipSetu/
-├── backend/
-│   ├── app.py                # Flask app factory & configuration
-│   ├── models.py             # SQLAlchemy models (User, Applicant, Recruiter,
-│   │                         #   Job, Resume, Skill, Ranking)
-│   ├── routes.py             # API endpoints (auth, jobs, resumes, profiles)
-│   ├── requirements.txt      # Python dependencies
-│   ├── update_db.py          # Schema migration helper script
-│   ├── test_login.py         # Manual login test script
-│   ├── .env                  # Environment variables (gitignored)
-│   └── .env.example          # Environment variable template
-├── frontend/
-│   ├── src/
-│   │   ├── app/              # App entry point, router, shared components
-│   │   ├── components/       # shadcn/ui components & layout wrappers
-│   │   ├── pages/            # Route pages
-│   │   │   ├── applicant/    # Dashboard, Resume, JobMatches, SkillGap, Profile
-│   │   │   └── recruiter/    # Dashboard, PostJob, Candidates, Profile
-│   │   ├── styles/           # Global CSS, Tailwind, theme, fonts
-│   │   └── imports/          # Lottie animation assets
-│   ├── index.html
-│   ├── vite.config.ts
-│   └── package.json
-├── migrations/
-│   └── 001_tables.sql        # PostgreSQL schema dump
-├── tsconfig.json
-└── README.md
+├── app/                      # Flask application package
+│   ├── routes/               # API endpoints for auth, jobs, resumes, dashboards
+│   ├── services/             # Resume parsing, matching, and extraction logic
+│   ├── utils/                # Scoring and helper utilities
+│   └── models/               # Trained NLP model assets
+├── frontend/                 # React + TypeScript client app
+│   ├── src/                  # UI pages, components, routes, and styles
+│   └── package.json          # Frontend dependencies and scripts
+├── migrations/               # SQL migration files
+├── docs/                     # Product docs, guides, and reference notes
+├── scripts/                  # Helper scripts and one-off utilities
+├── examples/                 # Sample resumes and example assets
+├── tests/                    # Automated tests
+├── uploads/                  # Runtime uploads (ignored in Git except placeholders)
+├── requirements.txt          # Backend Python dependencies
+├── tsconfig.json             # Shared TypeScript config
+└── README.md                 # Project overview
 ```
 
 ## API Endpoints

@@ -19,6 +19,19 @@ def create_job():
     if not recruiter:
         return jsonify({"error": "Recruiter not found"}), 404
 
+    salary_min = data.get('salary_min') if data.get('salary_min') not in (None, "", False) else None
+    salary_max = data.get('salary_max') if data.get('salary_max') not in (None, "", False) else None
+
+    if salary_min is not None and salary_max is not None:
+        try:
+            salary_min_value = float(salary_min)
+            salary_max_value = float(salary_max)
+        except (TypeError, ValueError):
+            return jsonify({"error": "Salary values must be numeric"}), 400
+
+        if salary_min_value > salary_max_value:
+            return jsonify({"error": "Minimum salary cannot be greater than maximum salary"}), 400
+
     job = Job(
         recruiter_id=user_id,
         title=data.get('title'),
@@ -27,8 +40,8 @@ def create_job():
         experience_level=data.get('experience_level'),
         job_type=data.get('job_type'),
         location=data.get('location'),
-        salary_min=data.get('salary_min') if data.get('salary_min') else None,
-        salary_max=data.get('salary_max') if data.get('salary_max') else None,
+        salary_min=salary_min,
+        salary_max=salary_max,
         status='published'
     )
     db.session.add(job)
@@ -259,7 +272,7 @@ def get_job_applications(job_id):
 
     job_skills = set(s.lower() for s in (job.skills or []))
 
-    from app.utils.scorer import score_experience, composite_ranking_score
+    from app.utils.scorer import score_experience, composite_ranking_score, cosine_similarity
 
     results = []
     for app in applications:
@@ -283,7 +296,8 @@ def get_job_applications(job_id):
 
         experience_yrs = float(resume.experience_years) if resume and resume.experience_years else 0
         exp_score = score_experience(experience_yrs, job.experience_level)
-        comp_score = composite_ranking_score(match_score, exp_score)
+        cosine_score = cosine_similarity(list(candidate_skills), list(job_skills))
+        comp_score = composite_ranking_score(match_score, exp_score, cosine_score)
 
         results.append({
             "application_id": str(app.application_id),
@@ -295,6 +309,7 @@ def get_job_applications(job_id):
             "matched_skills": matched,
             "missing_skills": missing,
             "match_score": match_score,
+            "cosine_similarity": cosine_score,
             "experience_years": experience_yrs,
             "experience_score": exp_score,
             "composite_score": comp_score,

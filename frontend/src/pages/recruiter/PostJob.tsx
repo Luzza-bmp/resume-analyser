@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { X, Sparkles } from "lucide-react";
+import { X } from "lucide-react";
 
 export default function RecruiterPostJob() {
   const [title, setTitle] = useState("");
@@ -41,6 +41,14 @@ export default function RecruiterPostJob() {
         alert("Please enter a job title");
         return;
     }
+
+    const minSalary = Number(salaryMin);
+    const maxSalary = Number(salaryMax);
+    if (salaryMin && salaryMax && minSalary > maxSalary) {
+      alert("Minimum salary cannot be greater than maximum salary.");
+      return;
+    }
+
     const recruiter_id = localStorage.getItem("user_id");
     const userRole = localStorage.getItem("user_role");
     if (!recruiter_id || userRole !== "recruiter") {
@@ -67,7 +75,7 @@ export default function RecruiterPostJob() {
           Authorization: `Bearer ${localStorage.getItem('access_token')}`
         }
       });
-      alert("Job posted successfully!");
+      alert("Job posted successfully");
       setTitle("");
       setDescription("");
       setSkills([]);
@@ -106,12 +114,7 @@ export default function RecruiterPostJob() {
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="description">Job Description</Label>
-                  <Button type="button" variant="ghost" size="sm" className="h-8 text-indigo-600 gap-1.5 px-2">
-                    <Sparkles className="h-3.5 w-3.5" /> Improve with AI
-                  </Button>
-                </div>
+                <Label htmlFor="description">Job Description</Label>
                 <Textarea 
                   id="description" 
                   value={description}

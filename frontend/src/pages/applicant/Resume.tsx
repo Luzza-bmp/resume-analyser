@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, UploadCloud, Edit3, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
+import { FileText, UploadCloud, Loader2, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 
@@ -123,14 +123,9 @@ export default function ApplicantResume() {
             {/* Extracted Profile Card */}
             <Card className="flex-1 flex flex-col border-slate-200 shadow-sm">
               <CardHeader className="pb-2 border-b border-slate-100">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle className="text-base font-bold">Extracted Profile</CardTitle>
-                    <CardDescription>AI-extracted skills & metadata.</CardDescription>
-                  </div>
-                  <Button variant="outline" size="sm" className="h-8 gap-1">
-                    <Edit3 className="h-3.5 w-3.5" /> Edit
-                  </Button>
+                <div>
+                  <CardTitle className="text-base font-bold">Extracted Profile</CardTitle>
+                  <CardDescription>AI-extracted skills & metadata.</CardDescription>
                 </div>
               </CardHeader>
               <CardContent className="pt-6 flex-1 space-y-6">

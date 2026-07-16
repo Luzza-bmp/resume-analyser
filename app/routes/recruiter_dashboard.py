@@ -52,6 +52,7 @@ def get_recruiter_dashboard(recruiter_id):
         applicant_name = (applicant.name or (resume.name if resume else None) or "Unknown Candidate")
         job_title = job.title
         resume_skills = resume.skills if (resume and resume.skills) else []
+        resume_file_path = os.path.basename(resume.file_path) if resume and resume.file_path else ""
 
         # Match score calculation
         job_skills = set(s.lower() for s in (job.skills or []))
@@ -68,6 +69,7 @@ def get_recruiter_dashboard(recruiter_id):
             "job_title": job_title,
             "matching_score": matching_score,
             "resume_skills": resume_skills[:3],  # Limit to top 3 skills to keep it neat
+            "resume_file_path": resume_file_path,
         })
 
     # Sort matches by score descending

@@ -2,9 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ExternalLink, Target, CheckCircle2, ChevronDown, ChevronUp, Loader2, UploadCloud, FileUp, BookOpen, Info } from "lucide-react";
+import { Target, CheckCircle2, Loader2, UploadCloud, FileUp, Info } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Link } from "react-router";
 import axios from "axios";
 
@@ -38,7 +37,6 @@ export default function ApplicantSkillGap() {
   const [gapData, setGapData] = useState<any>(null);
   const [gapLoading, setGapLoading] = useState(false);
   const [hasResume, setHasResume] = useState(true);
-  const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
 
   const userId = localStorage.getItem("user_id");
 
@@ -70,10 +68,6 @@ export default function ApplicantSkillGap() {
           headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
         });
         setGapData(res.data);
-        // Auto-open first item
-        if (res.data.missing_skills?.length > 0) {
-          setOpenItems({ [res.data.missing_skills[0].skill]: true });
-        }
         setHasResume(true);
       } catch (err: any) {
         if (err.response?.status === 404 || !localStorage.getItem("access_token")) setHasResume(false);
@@ -84,10 +78,6 @@ export default function ApplicantSkillGap() {
     };
     fetchGap();
   }, [selectedJobId, userId]);
-
-  const toggleItem = (skill: string) => {
-    setOpenItems(prev => ({ ...prev, [skill]: !prev[skill] }));
-  };
 
   const selectedJob = jobs.find(j => j.job_id === selectedJobId);
   const jobLabel = selectedJobId === "all"
@@ -177,49 +167,25 @@ export default function ApplicantSkillGap() {
                 ) : (
                   <div className="divide-y divide-slate-100">
                     {gapData.missing_skills.map((item: any) => (
-                      <Collapsible
-                        key={item.skill}
-                        open={openItems[item.skill]}
-                        onOpenChange={() => toggleItem(item.skill)}
-                        className="p-4 bg-white"
-                      >
-                        <CollapsibleTrigger className="w-full flex items-center justify-between group">
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${
-                              item.priority === 'High' ? 'bg-red-50 text-red-600' :
-                              item.priority === 'Medium' ? 'bg-orange-50 text-orange-600' :
-                              'bg-slate-100 text-slate-600'
-                            }`}>
-                              <Target className="h-4 w-4" />
-                            </div>
-                            <span className="font-semibold text-slate-900 capitalize">{item.skill}</span>
-                            <Badge variant="outline" className={
-                              item.priority === 'High' ? 'border-red-200 text-red-700 bg-red-50' :
-                              item.priority === 'Medium' ? 'border-orange-200 text-orange-700 bg-orange-50' :
-                              'border-slate-200 text-slate-700 bg-slate-50'
-                            }>
-                              {item.priority} Priority
-                            </Badge>
+                      <div key={item.skill} className="flex items-center justify-between p-4 bg-white">
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${
+                            item.priority === 'High' ? 'bg-red-50 text-red-600' :
+                            item.priority === 'Medium' ? 'bg-orange-50 text-orange-600' :
+                            'bg-slate-100 text-slate-600'
+                          }`}>
+                            <Target className="h-4 w-4" />
                           </div>
-                          <Button variant="ghost" size="sm" className="text-slate-400 group-hover:text-slate-900">
-                            {openItems[item.skill] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                          </Button>
-                        </CollapsibleTrigger>
-
-                        <CollapsibleContent className="pt-4 pl-14">
-                          <p className="text-sm font-medium text-slate-900 mb-3 uppercase tracking-wider">Recommended Resources</p>
-                          <ul className="space-y-2">
-                            {getResources(item.skill).map((res, i) => (
-                              <li key={i}>
-                                <a href="#" className="inline-flex items-center text-sm text-[#1E3A5F] hover:underline gap-1.5 p-1.5 -ml-1.5 rounded hover:bg-blue-50 transition-colors">
-                                  <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
-                                  {res}
-                                </a>
-                              </li>
-                            ))}
-                          </ul>
-                        </CollapsibleContent>
-                      </Collapsible>
+                          <span className="font-semibold text-slate-900 capitalize">{item.skill}</span>
+                          <Badge variant="outline" className={
+                            item.priority === 'High' ? 'border-red-200 text-red-700 bg-red-50' :
+                            item.priority === 'Medium' ? 'border-orange-200 text-orange-700 bg-orange-50' :
+                            'border-slate-200 text-slate-700 bg-slate-50'
+                          }>
+                            {item.priority} Priority
+                          </Badge>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}

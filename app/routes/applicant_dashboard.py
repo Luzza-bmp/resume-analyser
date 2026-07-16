@@ -167,10 +167,25 @@ def get_applicant_applications(applicant_id):
     if str(jwt_user_id) != str(applicant_id):
         return jsonify({"error": "Unauthorized"}), 403
 
-    from app.models import Application
+    from app.models import Application, Job, Recruiter
+
     apps = Application.query.filter_by(applicant_id=applicant_id).all()
     applied_job_ids = [str(a.job_id) for a in apps]
-    return jsonify({"applied_job_ids": applied_job_ids}), 200
+    applications = []
+
+    for app in apps:
+        job = Job.query.get(app.job_id)
+        recruiter = Recruiter.query.get(job.recruiter_id) if job else None
+        applications.append({
+            "application_id": str(app.application_id),
+            "job_id": str(app.job_id),
+            "job_title": job.title if job else "Unknown job",
+            "company": recruiter.company if recruiter and recruiter.company else "Recruiter",
+            "status": app.status or "applied",
+            "applied_at": app.applied_at.isoformat() if app.applied_at else "",
+        })
+
+    return jsonify({"applied_job_ids": applied_job_ids, "applications": applications}), 200
 
 
 @dashboard_bp.route('/<applicant_id>/skill-gap', methods=['GET'])

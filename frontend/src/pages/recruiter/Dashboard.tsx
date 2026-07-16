@@ -222,9 +222,21 @@ export default function RecruiterDashboardHome() {
                       <div className="hidden md:flex flex-wrap gap-1.5 max-w-[320px] min-w-0">
                         {candidate.resume_skills.map((s: string) => <Badge key={s} variant="outline" className="text-xs text-slate-500 whitespace-normal break-words">{s}</Badge>)}
                       </div>
-                      <Button variant="outline" size="sm" className="gap-2">
-                        <FileText className="h-3.5 w-3.5" /> Resume
-                      </Button>
+                      {candidate.resume_file_path ? (
+                        <a
+                          href={`${API}/resumes/download/${encodeURIComponent(candidate.resume_file_path)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <Button variant="outline" size="sm" className="gap-2">
+                            <FileText className="h-3.5 w-3.5" /> Resume
+                          </Button>
+                        </a>
+                      ) : (
+                        <Button variant="outline" size="sm" className="gap-2" disabled>
+                          <FileText className="h-3.5 w-3.5" /> Resume
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}

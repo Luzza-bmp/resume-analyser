@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Target, FileText, Briefcase, ChevronRight, Loader2, UploadCloud, Zap, Sparkles, CheckCircle2, Send } from "lucide-react";
+import { Target, FileText, Briefcase, ChevronRight, Loader2, UploadCloud, Zap, Sparkles, CheckCircle2, Send, Bell } from "lucide-react";
 import { Link } from "react-router";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -15,6 +15,8 @@ export default function ApplicantDashboardHome() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
   const [appliedJobs, setAppliedJobs] = useState<Set<string>>(new Set());
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [selectedJobForModal, setSelectedJobForModal] = useState<any>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -41,6 +43,7 @@ export default function ApplicantDashboardHome() {
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
       });
       setAppliedJobs(new Set(res.data.applied_job_ids || []));
+      setNotifications(res.data.applications || []);
     } catch (err) {
       console.error("Failed to fetch applied jobs", err);
     }
@@ -73,9 +76,55 @@ export default function ApplicantDashboardHome() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Welcome back, {firstName} 👋</h1>
-        <p className="text-slate-500 mt-1">{date}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Welcome back, {firstName} 👋</h1>
+          <p className="text-slate-500 mt-1">{date}</p>
+        </div>
+        <div className="relative">
+          <Button
+            variant="outline"
+            className="h-10 w-10 rounded-full p-0 relative"
+            onClick={() => setShowNotifications(prev => !prev)}
+          >
+            <Bell className="h-4 w-4" />
+            {notifications.length > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#F97316] text-[10px] font-semibold text-white">
+                {notifications.length}
+              </span>
+            )}
+          </Button>
+          {showNotifications && (
+            <div className="absolute right-0 top-12 z-20 w-80 rounded-xl border border-slate-200 bg-white p-3 shadow-xl">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-sm font-semibold text-slate-900">Application updates</p>
+                <span className="text-xs text-slate-500">{notifications.length} update{notifications.length === 1 ? "" : "s"}</span>
+              </div>
+              <div className="max-h-72 space-y-2 overflow-auto">
+                {notifications.length === 0 ? (
+                  <p className="rounded-lg bg-slate-50 px-3 py-3 text-sm text-slate-500">No updates yet.</p>
+                ) : notifications.map((item: any) => (
+                  <div key={item.application_id} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-slate-900">{item.job_title}</p>
+                      <Badge className={item.status === "rejected" ? "bg-red-100 text-red-700 hover:bg-red-100" : item.status === "shortlisted" ? "bg-green-100 text-green-700 hover:bg-green-100" : "bg-blue-100 text-blue-700 hover:bg-blue-100"}>
+                        {item.status}
+                      </Badge>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">{item.company}</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {item.status === "rejected"
+                        ? "Your application was not selected for this role."
+                        : item.status === "shortlisted"
+                        ? "You were shortlisted for this role."
+                        : "Your application is still being reviewed."}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* No resume prompt */}
