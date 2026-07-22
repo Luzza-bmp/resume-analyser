@@ -1,4 +1,4 @@
-from docx import Document
+from docx import Document  # doc  parse
 
 
 def extract_docx_text(filepath):
