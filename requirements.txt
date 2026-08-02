@@ -9,3 +9,5 @@ PyMuPDF
 python-docx
 spacy
 en-core-web-sm==3.8.0
+scikit-learn
+rapidfuzz
