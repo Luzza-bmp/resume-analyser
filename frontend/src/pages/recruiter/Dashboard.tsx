@@ -4,7 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Briefcase, Users, UserCheck, TrendingUp, ChevronRight, FileText, CheckCircle2, ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import axios from "axios";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 const API = "http://localhost:5000/api";
 
@@ -12,6 +24,36 @@ export default function RecruiterDashboardHome() {
   const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
+  const [cancelJobId, setCancelJobId] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate ? useNavigate() : undefined;
+
+  const handleConfirmCancel = async () => {
+    if (!cancelJobId) return;
+    try {
+      const token = localStorage.getItem('access_token');
+      await axios.delete(`${API}/jobs/${cancelJobId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const updatedJobs = data.jobs.map((job: any) =>
+        job.job_id === cancelJobId ? { ...job, status: 'cancelled' } : job
+      );
+      setData({
+        ...data,
+        jobs: updatedJobs,
+        active_postings: updatedJobs.filter((job: any) => job.status === 'published').length,
+      });
+      setConfirmOpen(false);
+      setCancelJobId(null);
+
+      toast({ title: 'Job cancelled', description: 'The job posting has been cancelled successfully.' });
+    } catch (err: any) {
+      console.error('Failed to cancel job', err);
+      toast({ title: 'Cancel failed', description: err.response?.data?.error || 'Could not cancel the job.', variant: 'destructive' });
+    }
+  };
 
   useEffect(() => {
     const userId = localStorage.getItem("user_id");
@@ -37,9 +79,8 @@ export default function RecruiterDashboardHome() {
   }, []);
 
   const topCandidates = data?.top_candidates || [];
-  const activeJobs = data?.jobs || [];
+  const activeJobs = (data?.jobs || []).filter((job: any) => job.status === 'published');
   const userName = data?.name || localStorage.getItem("user_name") || "Recruiter";
-
   if (loading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
@@ -192,7 +233,7 @@ export default function RecruiterDashboardHome() {
           <Card className="lg:col-span-2 shadow-md border-none">
             <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-slate-100">
               <CardTitle className="text-lg font-bold flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-[#F97316]" /> Top Matches (AI Ranked)
+                <Sparkles className="h-5 w-5 text-[#F97316]" /> Top Matches 
               </CardTitle>
               <Link to="/recruiter/candidates">
                 <Button variant="ghost" size="sm" className="text-slate-500 hover:text-[#1E3A5F]">
@@ -254,13 +295,47 @@ export default function RecruiterDashboardHome() {
                 {activeJobs.map((post: any) => (
                   <div key={post.job_id} className="p-4 hover:bg-slate-50 transition-colors">
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-semibold text-slate-900">{post.title}</h4>
+                      <div>
+                        <h4 className="font-semibold text-slate-900">{post.title}</h4>
+                        {post.status === 'cancelled' && (
+                          <Badge className="bg-red-50 text-red-700 border-red-100 mt-2">Cancelled</Badge>
+                        )}
+                      </div>
                       <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-200">{post.status || 'Active'}</Badge>
                     </div>
-                    <div className="flex justify-between items-center text-sm text-slate-500">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between text-sm text-slate-500">
                       <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> {post.candidates_count ?? 0} Candidates</span>
                       <span>{post.created_at ? new Date(post.created_at).toLocaleDateString() : "Recent"}</span>
                     </div>
+                    {post.status === 'published' && (
+                      <div className="mt-4">
+                        <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 border-red-200 hover:bg-red-50"
+                            onClick={() => {
+                              setCancelJobId(post.job_id);
+                              setConfirmOpen(true);
+                            }}
+                          >
+                            Cancel Job
+                          </Button>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Cancel job posting</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to cancel this job? Applicants will no longer be able to apply.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel onClick={() => setCancelJobId(null)}>Keep Job</AlertDialogCancel>
+                              <AlertDialogAction onClick={handleConfirmCancel}>Cancel Job</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

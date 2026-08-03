@@ -92,22 +92,7 @@ export default function LandingPage() {
       <section className="border-y border-slate-200 bg-white">
         <div className="max-w-7xl mx-auto px-6 py-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-slate-100">
-            <div className="flex flex-col">
-              <span className="text-3xl font-bold text-[#1E3A5F]">10,000+</span>
-              <span className="text-sm font-medium text-slate-500 mt-1">Job Seekers</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-3xl font-bold text-[#1E3A5F]">500+</span>
-              <span className="text-sm font-medium text-slate-500 mt-1">Companies</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-3xl font-bold text-[#F97316]">85%</span>
-              <span className="text-sm font-medium text-slate-500 mt-1">Match Accuracy</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-3xl font-bold text-[#1E3A5F]">72hrs</span>
-              <span className="text-sm font-medium text-slate-500 mt-1">Avg. Time-to-Hire</span>
-            </div>
+            
           </div>
         </div>
       </section>

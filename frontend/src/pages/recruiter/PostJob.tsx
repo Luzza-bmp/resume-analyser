@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { X } from "lucide-react";
 
 export default function RecruiterPostJob() {
   // original behavior: use browser alerts
+  const { toast } = useToast();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
@@ -39,21 +41,21 @@ export default function RecruiterPostJob() {
   const handlePostJob = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title) {
-      alert("Please enter a job title");
+      toast({ title: "Missing title", description: "Please enter a job title.", variant: "destructive" });
       return;
     }
 
     const minSalary = Number(salaryMin);
     const maxSalary = Number(salaryMax);
     if (salaryMin && salaryMax && minSalary > maxSalary) {
-      alert("Minimum salary cannot be greater than maximum salary.");
+      toast({ title: "Invalid salary range", description: "Minimum salary cannot be greater than maximum salary.", variant: "destructive" });
       return;
     }
 
     const recruiter_id = localStorage.getItem("user_id");
     const userRole = localStorage.getItem("user_role");
     if (!recruiter_id || userRole !== "recruiter") {
-      alert("Please log in as a recruiter before posting a job.");
+      toast({ title: "Not authorized", description: "Please log in as a recruiter before posting a job.", variant: "destructive" });
       setIsSubmitting(false);
       return;
     }
@@ -76,7 +78,7 @@ export default function RecruiterPostJob() {
           Authorization: `Bearer ${localStorage.getItem('access_token')}`
         }
       });
-      alert("Job posted successfully");
+      toast({ title: "Job posted", description: "Job posted successfully." });
       setTitle("");
       setDescription("");
       setSkills([]);
@@ -88,7 +90,7 @@ export default function RecruiterPostJob() {
     } catch (err: any) {
       console.error("Post job error:", err);
       const message = err.response?.data?.error || "Failed to post job";
-      alert(message);
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }

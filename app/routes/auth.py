@@ -3,19 +3,32 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 from app import db
 from app.models import User, Recruiter
 import bcrypt
-#blueprint is a way to organize a group of related routes and views in a Flask application. 
-# #It allows you to modularize your application and keep related functionality together.
+
+# blueprint is a way to organize a group of related routes and views in a Flask application.
+# It allows you to modularize your application and keep related functionality together.
 # In this case, auth_bp is a Blueprint instance that will contain all the routes related to authentication (like register, login, and me).
-auth_bp = Blueprint("auth", __name__)#auth_bp is an object to hold routes (/login, /register, etc.)
- #__name__ = "app.routes.auth"
- #auth in the parameter is the name of the blueprint, which can be used for URL generation and other purposes. It is a unique identifier for the blueprint within the application 
- #like login route becomes auth.login
+auth_bp = Blueprint("auth", __name__)
+
+# Password policy helper
+
+def is_strong_password(password: str) -> bool:
+    return (
+        len(password) >= 8
+        and any(c.islower() for c in password)
+        and any(c.isupper() for c in password)
+        and any(c.isdigit() for c in password)
+    )
+
+
+def password_policy_message() -> str:
+    return "Password must be at least 8 characters long and include uppercase, lowercase, and a number."
+
 
 @auth_bp.route("/register", methods=["POST"])
 def register():
-    data = request.get_json() #parses the incoming JSON data from the request body and returns it as a Python dictionary. This allows you to easily access the data sent by the client in a structured format.
+    data = request.get_json()
 
-    email = data.get("email", "").strip().lower()#if email is missing "" returns an empty string. email is a key of dictionary in data variable
+    email = data.get("email", "").strip().lower()
     password = data.get("password", "")
     role = data.get("role", "").strip().lower()
 
@@ -23,20 +36,20 @@ def register():
     if not email or not password or not role:
         return jsonify({"error": "email, password, and role are required"}), 400
 
+    if not is_strong_password(password):
+        return jsonify({"error": password_policy_message()}), 400
+
     if role not in ("applicant", "recruiter"):
         return jsonify({"error": "role must be 'applicant' or 'recruiter'"}), 400
 
-    if User.query.filter_by(email=email).first(): #left email is a column in the users table, right email is the variable we just defined. This line checks if there is already a user in the database with the same email address. If such a user exists, it returns an error response indicating that the email is already registered.
+    if User.query.filter_by(email=email).first():
         return jsonify({"error": "Email already registered"}), 409
 
-    # Hash password
-    password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8") #bcrypt.hashpw(password_bytes, salt)
-    #utf8 converts the password string into bytes, which is required by bcrypt. 
-#with salt, bcrypt.gensalt() generates a random unique salt value that is used to enhance the security of the hashed password. The resulting hash is then decoded back into a string format for storage in the database.
+    password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     new_user = User(email=email, password_hash=password_hash, role=role)
     db.session.add(new_user)
     db.session.commit()
-    # Create Applicant entry for applicant role
+
     if role == 'applicant':
         from app.models import Applicant
         applicant = Applicant(user_id=new_user.user_id, name=data.get('name'), email=new_user.email)
@@ -44,7 +57,7 @@ def register():
         db.session.commit()
 
     if role == 'recruiter':
-        recruiter = Recruiter(user_id=new_user.user_id, email=new_user.email)
+        recruiter = Recruiter(user_id=new_user.user_id, name=data.get('name'), email=new_user.email)
         db.session.add(recruiter)
         db.session.commit()
 
@@ -54,6 +67,37 @@ def register():
         "email": new_user.email,
         "role": new_user.role
     }), 201
+
+
+@auth_bp.route("/change-password", methods=["POST"])
+@jwt_required()
+def change_password():
+    data = request.get_json()
+    old_password = data.get("old_password", "")
+    new_password = data.get("new_password", "")
+    confirm_password = data.get("confirm_password", "")
+
+    if not old_password or not new_password or not confirm_password:
+        return jsonify({"error": "old_password, new_password, and confirm_password are required"}), 400
+
+    if new_password != confirm_password:
+        return jsonify({"error": "New passwords do not match"}), 400
+
+    if not is_strong_password(new_password):
+        return jsonify({"error": password_policy_message()}), 400
+
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if not bcrypt.checkpw(old_password.encode("utf-8"), user.password_hash.encode("utf-8")):
+        return jsonify({"error": "Current password is incorrect"}), 401
+
+    user.password_hash = bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    db.session.commit()
+
+    return jsonify({"message": "Password updated successfully"}), 200
 
 
 @auth_bp.route("/login", methods=["POST"])

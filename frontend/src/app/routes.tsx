@@ -20,6 +20,7 @@ import RecruiterPostJob from "../pages/recruiter/PostJob";
 import RecruiterCandidates from "../pages/recruiter/Candidates";
 import RecruiterProfile from "../pages/recruiter/Profile";
 import RecruiterBulkScreening from "../pages/recruiter/BulkScreening";
+import ChangePasswordPage from "../pages/ChangePasswordPage";
 
 export const router = createBrowserRouter([
   { path: "/", Component: LandingPage },
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
   { path: "/recruiter/candidates", Component: () => <RecruiterLayout><RecruiterCandidates /></RecruiterLayout> },
   { path: "/recruiter/bulk-screen", Component: () => <RecruiterLayout><RecruiterBulkScreening /></RecruiterLayout> },
   { path: "/recruiter/profile", Component: () => <RecruiterLayout><RecruiterProfile /></RecruiterLayout> },
+  { path: "/change-password", Component: ChangePasswordPage },
 
   { path: "*", Component: NotFound },
 ]);
