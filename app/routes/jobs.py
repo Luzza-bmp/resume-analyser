@@ -323,7 +323,7 @@ def get_job_applications(job_id):
 
     job_skills = set(s.lower() for s in (job.skills or []))
 
-    from app.utils.scorer import score_experience, composite_ranking_score, cosine_similarity
+    from app.utils.scorer import score_experience, composite_ranking_score, cosine_similarity, score_format
 
     results = []
     for app in applications:
@@ -350,6 +350,14 @@ def get_job_applications(job_id):
         cosine_score = cosine_similarity(list(candidate_skills), list(job_skills))
         comp_score = composite_ranking_score(match_score, exp_score, cosine_score)
 
+        # Compute a lightweight format score and mix it into the ranking.
+        # We keep the original composite (`comp_score`) for transparency and add `rank_score`
+        # which blends composite (90%) with format (10%). Adjust weights as needed.
+        fmt_score = 0.0
+        if resume:
+            fmt_score = score_format({"skills": resume.skills or [], "experience": resume.experience_years or 0})
+        rank_score = round(comp_score * 0.9 + fmt_score * 0.1, 2)
+
         results.append({
             "application_id": str(app.application_id),
             "applicant_id": str(app.applicant_id),
@@ -364,12 +372,14 @@ def get_job_applications(job_id):
             "experience_years": experience_yrs,
             "experience_score": exp_score,
             "composite_score": comp_score,
+            "format_score": fmt_score,
+            "rank_score": rank_score,
             "status": app.status,
             "applied_at": app.applied_at.isoformat() if app.applied_at else "",
         })
 
-    # Sort by composite score (skill match 70% + experience fit 30%) descending
-    results.sort(key=lambda x: x["composite_score"], reverse=True)
+    # Sort by blended rank score (composite + small format boost) descending
+    results.sort(key=lambda x: x["rank_score"], reverse=True)
 
     return jsonify({
         "job_id": job_id,
