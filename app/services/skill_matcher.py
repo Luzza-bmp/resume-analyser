@@ -64,11 +64,7 @@ SKILLS_DB = {
     "metasploit", "nmap",
     "owasp", "firewall",
 
-    # Networking
-    "tcp/ip", "dns", "dhcp",
-    "routing", "switching",
-    "ccna", "vpn",
-
+   
     # Operating Systems
     "windows", "linux", "macos",
 
@@ -80,14 +76,7 @@ SKILLS_DB = {
     "multithreading",
     "concurrency",
 
-    # Testing
-    "unit testing",
-    "integration testing",
-    "selenium",
-    "pytest",
-    "junit",
-    "postman",
-    "automation testing",
+   
 
     # Version Control
     "git", "github",
@@ -103,45 +92,8 @@ SKILLS_DB = {
     "ux design",
     "wireframing",
     "prototyping",
-
-    # Office Tools
-    "ms office",
-    "microsoft office",
-    "word",
-    "excel",
-    "powerpoint",
-    "outlook",
-    "google docs",
-    "google sheets",
-
-    # Business
-    "business analysis",
-    "project management",
-    "agile",
-    "scrum",
-    "kanban",
-    "jira",
-    "confluence",
-
-    # Finance
-    "accounting",
-    "financial analysis",
-    "bookkeeping",
-    "quickbooks",
-    "sap",
-    "erp",
-
-    # Marketing
-    "digital marketing",
     "seo",
-    "sem",
-    "content writing",
-    "copywriting",
-    "social media marketing",
-    "email marketing",
-    "google analytics",
-
-    # Design
+   # Design
     "graphic design",
     "video editing",
     "photography",
@@ -213,14 +165,11 @@ SKILLS_DB = {
     "full stack development",
     "backend development",
     "frontend development"
-    # Big Data
-"apache spark", "spark", "hadoop", "hive", "pig",
-"kafka", "airflow", "databricks", "hdfs", "sqoop",
-"flume", "presto",
+   
 
 # Data Engineering
-"data engineering", "etl", "elt", "apache beam",
-"snowflake", "redshift", "bigquery", "azure synapse",
+"data engineering", "etl",  "apache beam",
+"azure synapse",
 "data pipeline", "data modeling",
 
 # Embedded Systems & IoT
@@ -228,9 +177,7 @@ SKILLS_DB = {
 "microcontrollers", "esp32", "esp8266",
 "iot", "mqtt", "embedded systems",
 
-# Robotics
-"robotics", "ros", "gazebo",
-"path planning", "slam", "robot operating system",
+
 
 # Blockchain
 "blockchain", "ethereum", "solidity",
@@ -247,31 +194,11 @@ SKILLS_DB = {
 "ansys", "fusion 360", "revit",
 "civil 3d",
 
-# Electrical Engineering
-"pcb design", "proteus", "multisim",
-"ltspice", "circuit design",
-"electronics", "vlsi",
 
-# Mechanical Engineering
-"cad", "cam", "cnc",
-"manufacturing", "thermodynamics",
-"solid mechanics",
 
-# Civil Engineering
-"structural analysis", "surveying",
-"construction management",
-"quantity surveying",
 
-# Healthcare
-"medical coding", "ehr",
-"patient care", "clinical research",
-"pharmacology",
 
-# Accounting & Finance
-"tally", "quickbooks", "sap fico",
-"financial reporting", "taxation",
-"auditing", "budgeting",
-"forecasting", "payroll",
+
 
 # Human Resources
 "recruitment", "talent acquisition",
@@ -290,30 +217,14 @@ SKILLS_DB = {
 "customer support", "technical support",
 "help desk", "ticketing",
 "zendesk", "freshdesk",
-
-# Digital Marketing
-"google ads", "facebook ads",
-"instagram marketing",
-"linkedin marketing",
-"content marketing",
-"affiliate marketing",
 "wordpress",
 
 # Graphic Design
 "adobe photoshop",
 "adobe illustrator",
-"indesign",
-"coreldraw",
-"figma",
-"sketch",
-"branding",
-
-# Video Production
-"video editing",
 "davinci resolve",
 "adobe premiere pro",
 "after effects",
-"cinematography",
 "motion graphics",
 
 # Cloud & Infrastructure
@@ -324,36 +235,6 @@ SKILLS_DB = {
 "nginx",
 "apache server",
 
-# Security
-"identity management",
-"iam",
-"siem",
-"soc",
-"incident response",
-"digital forensics",
-"malware analysis",
-
-# QA / Testing
-"manual testing",
-"black box testing",
-"white box testing",
-"performance testing",
-"load testing",
-"jmeter",
-"cypress",
-"playwright",
-
-
-
-
-
-# Research
-"literature review",
-"academic writing",
-"scientific research",
-"survey design",
-"statistical analysis",
-
 # Mathematics
 "linear algebra",
 "calculus",
@@ -361,26 +242,10 @@ SKILLS_DB = {
 "optimization",
 "numerical methods",
 
-# Soft Skills
-"self learning",
-"fast learner",
-"initiative",
-"emotional intelligence",
-"active listening",
-"decision making",
-"strategic planning",
-"coaching",
-"relationship building",
-"cross-functional collaboration",
-
-
 
 # Office Administration
 "data entry",
 "record keeping",
-
-
-
 "event management",
 
 # Education
@@ -389,27 +254,6 @@ SKILLS_DB = {
 "curriculum development",
 "classroom management",
 "online tutoring",
-
-# Legal
-"legal research",
-"contract drafting",
-"compliance",
-"litigation support",
-
-# Supply Chain
-"logistics",
-"inventory management",
-"warehouse management",
-"procurement",
-"supply chain management",
-
-# Manufacturing
-"lean manufacturing",
-"six sigma",
-"quality assurance",
-"quality control",
-"production planning",
-
 # Networking
 "ccnp",
 "network troubleshooting",
@@ -417,8 +261,6 @@ SKILLS_DB = {
 "wan",
 "wireless networking",
 "cisco packet tracer",
-
-  
 }
 
 
