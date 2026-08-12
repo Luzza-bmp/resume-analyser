@@ -149,6 +149,20 @@ export default function ApplicantResume() {
                     </div>
 
                     <div className="pt-5 border-t border-slate-100">
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Contact Info</h4>
+                      <div className="space-y-2.5 text-xs text-slate-600">
+                        <p className="flex justify-between">
+                          <span className="font-semibold text-slate-500">Email:</span>
+                          <span className="font-medium text-slate-800">{resume.email || "Not found"}</span>
+                        </p>
+                        <p className="flex justify-between">
+                          <span className="font-semibold text-slate-500">Phone:</span>
+                          <span className="font-medium text-slate-800">{resume.phone || "Not found"}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="pt-5 border-t border-slate-100">
                       <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Document Details</h4>
                       <div className="space-y-2.5 text-xs text-slate-600">
                         <p className="flex justify-between">

@@ -141,6 +141,57 @@ def apply_to_job(job_id):
     }), 201
 
 
+@jobs_bp.route('/<job_id>/apply', methods=['DELETE'])
+@jwt_required()
+def cancel_application(job_id):
+    """DELETE /api/jobs/<job_id>/apply
+    Applicant cancels their own application for a job.
+    """
+    applicant_id = get_jwt_identity()
+
+    job = Job.query.get(job_id)
+    if not job:
+        return jsonify({"error": "Job not found"}), 404
+
+    application = Application.query.filter_by(job_id=job_id, applicant_id=applicant_id).first()
+    if not application:
+        return jsonify({"error": "Application not found"}), 404
+
+    db.session.delete(application)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Application cancelled successfully",
+        "job_id": job_id,
+        "application_id": str(application.application_id)
+    }), 200
+
+
+@jobs_bp.route('/<job_id>', methods=['DELETE'])
+@jwt_required()
+def cancel_job(job_id):
+    """DELETE /api/jobs/<job_id>
+    Recruiter cancels their own published job.
+    """
+    recruiter_id = get_jwt_identity()
+    job = Job.query.get(job_id)
+    if not job:
+        return jsonify({"error": "Job not found"}), 404
+    if str(job.recruiter_id) != str(recruiter_id):
+        return jsonify({"error": "Unauthorized"}), 403
+    if job.status != 'published':
+        return jsonify({"error": "Job cannot be cancelled"}), 400
+
+    job.status = 'cancelled'
+    db.session.commit()
+
+    return jsonify({
+        "job_id": str(job.job_id),
+        "status": job.status,
+        "message": "Job cancelled successfully"
+    }), 200
+
+
 @jobs_bp.route('/<job_id>/score-resume', methods=['POST'])
 @jwt_required()
 def score_resume_for_job(job_id):
@@ -272,7 +323,7 @@ def get_job_applications(job_id):
 
     job_skills = set(s.lower() for s in (job.skills or []))
 
-    from app.utils.scorer import score_experience, composite_ranking_score, cosine_similarity
+    from app.utils.scorer import score_experience, composite_ranking_score, cosine_similarity, score_format
 
     results = []
     for app in applications:
@@ -299,6 +350,14 @@ def get_job_applications(job_id):
         cosine_score = cosine_similarity(list(candidate_skills), list(job_skills))
         comp_score = composite_ranking_score(match_score, exp_score, cosine_score)
 
+        # Compute a lightweight format score and mix it into the ranking.
+        # We keep the original composite (`comp_score`) for transparency and add `rank_score`
+        # which blends composite (90%) with format (10%). Adjust weights as needed.
+        fmt_score = 0.0
+        if resume:
+            fmt_score = score_format({"skills": resume.skills or [], "experience": resume.experience_years or 0})
+        rank_score = round(comp_score * 0.9 + fmt_score * 0.1, 2)
+
         results.append({
             "application_id": str(app.application_id),
             "applicant_id": str(app.applicant_id),
@@ -313,12 +372,14 @@ def get_job_applications(job_id):
             "experience_years": experience_yrs,
             "experience_score": exp_score,
             "composite_score": comp_score,
+            "format_score": fmt_score,
+            "rank_score": rank_score,
             "status": app.status,
             "applied_at": app.applied_at.isoformat() if app.applied_at else "",
         })
 
-    # Sort by composite score (skill match 70% + experience fit 30%) descending
-    results.sort(key=lambda x: x["composite_score"], reverse=True)
+    # Sort by blended rank score (composite + small format boost) descending
+    results.sort(key=lambda x: x["rank_score"], reverse=True)
 
     return jsonify({
         "job_id": job_id,
@@ -354,4 +415,5 @@ def update_application_status(job_id, application_id):
     db.session.commit()
 
     return jsonify({"application_id": str(application.application_id), "status": application.status}), 200
+
 

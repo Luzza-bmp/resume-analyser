@@ -1,4 +1,5 @@
 import math
+from collections import Counter
 
 
 def calculate_match_score(resume_skills, jd_skills):
@@ -11,23 +12,56 @@ def calculate_match_score(resume_skills, jd_skills):
 
 
 def cosine_similarity(resume_skills, jd_skills):
-    """Return cosine similarity between two skill lists as a percentage."""
+    """Compute cosine similarity between a resume and JD using a simple TF–IDF weighting.
+
+    This replaces the previous binary-presence cosine with TF–IDF computed over the
+    two-document corpus (resume, jd). Returns a percentage (0-100).
+    """
     if not jd_skills:
         return 0.0
 
-    resume_vector = {skill.lower().strip(): 1 for skill in resume_skills if skill}
-    jd_vector = {skill.lower().strip(): 1 for skill in jd_skills if skill}
+    # normalize terms
+    resume_terms = [s.lower().strip() for s in (resume_skills or []) if s]
+    jd_terms = [s.lower().strip() for s in (jd_skills or []) if s]
 
-    if not resume_vector or not jd_vector:
+    if not resume_terms or not jd_terms:
         return 0.0
 
-    shared = set(resume_vector) & set(jd_vector)
-    if not shared:
+    # Vocabulary is the union of terms
+    vocab = list(sorted(set(resume_terms) | set(jd_terms)))
+
+    # Term frequencies (TF)
+    tf_resume = Counter(resume_terms)
+    tf_jd = Counter(jd_terms)
+
+    # Document frequencies (DF) over the two-doc corpus
+    df = {}
+    for term in vocab:
+        df_count = 0
+        if tf_resume.get(term, 0) > 0:
+            df_count += 1
+        if tf_jd.get(term, 0) > 0:
+            df_count += 1
+        df[term] = df_count
+
+    # Smooth IDF: idf = log((1 + N) / (1 + df)) + 1
+    N = 2
+    idf = {t: math.log((1.0 + N) / (1.0 + df[t])) + 1.0 for t in vocab}
+
+    # Build TF-IDF vectors
+    vec_resume = [tf_resume.get(t, 0) * idf[t] for t in vocab]
+    vec_jd = [tf_jd.get(t, 0) * idf[t] for t in vocab]
+
+    # Compute dot product and norms
+    dot = sum(a * b for a, b in zip(vec_resume, vec_jd))
+    norm_r = math.sqrt(sum(a * a for a in vec_resume))
+    norm_j = math.sqrt(sum(b * b for b in vec_jd))
+
+    if norm_r == 0 or norm_j == 0:
         return 0.0
 
-    dot_product = len(shared)
-    magnitude = math.sqrt(len(resume_vector) * len(jd_vector))
-    return round((dot_product / magnitude) * 100, 2)
+    cosine = dot / (norm_r * norm_j)
+    return round(cosine * 100, 2)
 
 
 def get_missing_skills(resume_skills, jd_skills):

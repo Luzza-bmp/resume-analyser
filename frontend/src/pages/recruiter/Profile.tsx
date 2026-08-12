@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, ChangeEvent, useCallback } from "react";
+import { Link } from "react-router";
 import axios from "axios";
 import Cropper, { Area } from "react-easy-crop";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -23,8 +24,19 @@ export default function RecruiterProfile() {
     company: "",
     role: "", // This is the job title in the UI
   });
+  const [initialProfile, setInitialProfile] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    location: "",
+    company: "",
+    role: "",
+  });
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [initialAvatarPreview, setInitialAvatarPreview] = useState<string>("");
+  const [initialAvatarRemoved, setInitialAvatarRemoved] = useState(false);
   const [croppedImage, setCroppedImage] = useState<string>("");
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -51,7 +63,7 @@ export default function RecruiterProfile() {
         const fullName = response.data.name || "";
         const [firstName, ...lastNameParts] = fullName.split(" ");
         
-        setProfile({
+        const loadedProfile = {
           firstName: firstName || "",
           lastName: lastNameParts.join(" ") || "",
           email: response.data.email || "",
@@ -59,13 +71,19 @@ export default function RecruiterProfile() {
           location: response.data.location || "",
           company: response.data.company || "",
           role: response.data.job_title || "",
-        });
+        };
+        setProfile(loadedProfile);
+        setInitialProfile(loadedProfile);
         if (response.data.avatar_url) {
           setImagePreview(response.data.avatar_url);
+          setInitialAvatarPreview(response.data.avatar_url);
           setAvatarRemoved(false);
+          setInitialAvatarRemoved(false);
         } else {
           setImagePreview("");
+          setInitialAvatarPreview("");
           setAvatarRemoved(false);
+          setInitialAvatarRemoved(false);
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -147,6 +165,18 @@ export default function RecruiterProfile() {
 
   const handleUploadClick = () => {
     inputRef.current?.click();
+  };
+
+  const handleCancel = () => {
+    setProfile(initialProfile);
+    setImagePreview(initialAvatarPreview);
+    setAvatarRemoved(initialAvatarRemoved);
+    setSelectedFile(null);
+    setCroppedBlob(null);
+    setPreviousImagePreview("");
+    setIsCropping(false);
+    setZoom(1);
+    setCrop({ x: 0, y: 0 });
   };
 
   const onCropComplete = useCallback((_: Area, croppedAreaPixels: Area) => {
@@ -271,9 +301,19 @@ export default function RecruiterProfile() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Recruiter Profile</h1>
-        <p className="text-slate-500 mt-1">Manage your account and company details.</p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Recruiter Profile</h1>
+          <p className="text-slate-500 mt-1">Manage your account and company details.</p>
+        </div>
+        <div>
+          <Link
+            to="/change-password"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+          >
+            Change password
+          </Link>
+        </div>
       </div>
 
       <Card>
@@ -483,7 +523,7 @@ export default function RecruiterProfile() {
               </div>
 
               <div className="flex justify-end gap-4 pt-6 mt-6 border-t border-slate-100">
-                <Button variant="outline">Cancel</Button>
+                <Button variant="outline" type="button" onClick={handleCancel}>Cancel</Button>
                 <Button 
                   className="bg-[#1E3A5F] hover:bg-[#1E3A5F]/90"
                   onClick={handleSave}

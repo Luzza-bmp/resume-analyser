@@ -372,6 +372,15 @@ export default function ApplicantDashboardHome() {
         job={selectedJobForModal}
         applied={selectedJobForModal ? appliedJobs.has(selectedJobForModal.job_id) : false}
         onApplySuccess={handleApplySuccess}
+        onCancelSuccess={(jobId) => {
+          setAppliedJobs(prev => {
+            const next = new Set(prev);
+            next.delete(jobId);
+            return next;
+          });
+          fetchAppliedJobs();
+          fetchDashboard();
+        }}
       />
     </div>
   );

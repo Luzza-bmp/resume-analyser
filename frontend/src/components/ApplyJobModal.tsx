@@ -13,7 +13,8 @@ import {
   Sparkles,
   Award,
   AlertTriangle,
-  FileText
+  FileText,
+  Trash2
 } from "lucide-react";
 import axios from "axios";
 
@@ -23,17 +24,20 @@ interface ApplyJobModalProps {
   job: any;
   applied: boolean;
   onApplySuccess: (jobId: string) => void;
+  onCancelSuccess?: (jobId: string) => void;
 }
 
 const API = "http://localhost:5000/api";
 
-export function ApplyJobModal({ isOpen, onClose, job, applied, onApplySuccess }: ApplyJobModalProps) {
+export function ApplyJobModal({ isOpen, onClose, job, applied, onApplySuccess, onCancelSuccess }: ApplyJobModalProps) {
   const [step, setStep] = useState<"details" | "score" | "success">("details");
   const [isScoring, setIsScoring] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [scoreData, setScoreData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isCancelling, setIsCancelling] = useState(false);
 
   if (!job) return null;
 
@@ -106,6 +110,24 @@ export function ApplyJobModal({ isOpen, onClose, job, applied, onApplySuccess }:
       setError(err.response?.data?.error || "Failed to submit application.");
     } finally {
       setIsApplying(false);
+    }
+  };
+
+  const handleCancelApplication = async () => {
+    setIsCancelling(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.delete(`${API}/jobs/${job.job_id}/apply`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      onCancelSuccess?.(job.job_id);
+      handleClose();
+    } catch (err: any) {
+      console.error(err);
+      setError(err.response?.data?.error || "Failed to cancel application.");
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -203,7 +225,29 @@ export function ApplyJobModal({ isOpen, onClose, job, applied, onApplySuccess }:
               </div>
 
               {/* Apply / Upload Resume Action Container */}
-              {!applied && (
+              {applied ? (
+                <div className="pt-4 border-t border-slate-100 space-y-4">
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <p className="font-semibold text-slate-900">You have already applied for this role.</p>
+                    <p className="text-sm text-slate-500 mt-1">
+                      Cancelling the application will remove it from the recruiter’s review queue.
+                    </p>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    onClick={handleCancelApplication}
+                    disabled={isCancelling}
+                    className="w-full py-4"
+                  >
+                    {isCancelling ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Trash2 className="h-4 w-4 mr-2" />
+                    )}
+                    Cancel Application
+                  </Button>
+                </div>
+              ) : (
                 <div className="pt-4 border-t border-slate-100 flex flex-col gap-3">
                   <p className="text-xs text-slate-500 font-medium">
                     To apply, confirm your resume. The system will calculate your match score before you submit.

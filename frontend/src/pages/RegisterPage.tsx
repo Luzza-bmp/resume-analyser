@@ -137,6 +137,7 @@ export default function RegisterPage() {
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-11" />
+                <p className="text-xs text-slate-500">Must be at least 8 characters and include uppercase, lowercase, and a number.</p>
               </div>
             </div>
             {error && <p className="text-red-500 text-sm">{error}</p>}
