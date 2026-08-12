@@ -147,10 +147,9 @@ export default function LoginPage() {
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-11" />
               </div>
-              <div className="space-y-2">
+                <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <a href="#" className="text-sm font-medium text-[#F97316] hover:underline">Forgot password?</a>
                 </div>
                 <div className="relative">
                   <Input
